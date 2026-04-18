@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String        @id @default(uuid())
+  role            Role          @default(USER)
+  name            String
+  email           String        @unique(map: "User_email_key")
+  passwordHash    String
+  bankAccountInfo String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  address         String?
+  phoneNumber     String?
+  books           Book[]
+  masterOrders    MasterOrder[]
+  subOrders       SubOrder[]
+  wallets         Wallet?
+
+  @@map("user")
+}
+
+model Book {
+  id            String        @id @default(uuid())
+  sellerId      String
+  title         String
+  price         Decimal       @db.Decimal(15, 2)
+  stockQuantity Int           @default(1)
+  condition     BookCondition @default(GOOD)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  category      BookCategory  @default(OTHERS)
+  author        String?
+  description   String?       @db.Text
+  imageUrl      String?       @db.Text
+  seller        User          @relation(fields: [sellerId], references: [id], map: "Book_sellerId_fkey")
+  orderItems    OrderItem[]
+  reviews       Review[]
+
+  @@index([sellerId], map: "Book_sellerId_fkey")
+  @@map("book")
+}
+
+model MasterOrder {
+  id              String        @id @default(uuid())
+  buyerId         String
+  totalPayment    Decimal       @db.Decimal(15, 2)
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  transactionId   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  discountAmount  Decimal       @default(0.00) @db.Decimal(15, 2)
+  voucherId       String?
+  shippingAddress String?
+  shippingName    String?
+  shippingPhone   String?
+  buyer           User          @relation(fields: [buyerId], references: [id], map: "MasterOrder_buyerId_fkey")
+  voucher         Voucher?      @relation(fields: [voucherId], references: [id])
+  subOrders       SubOrder[]
+
+  @@index([buyerId], map: "MasterOrder_buyerId_fkey")
+  @@index([voucherId], map: "masterorder_voucherId_fkey")
+  @@map("masterorder")
+}
+
+model SubOrder {
+  id                 String              @id @default(uuid())
+  masterOrderId      String
+  sellerId           String
+  subTotal           Decimal             @db.Decimal(15, 2)
+  platformFee        Decimal             @db.Decimal(15, 2)
+  netAmount          Decimal             @db.Decimal(15, 2)
+  trackingCode       String?
+  status             OrderStatus         @default(PENDING)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  dispute            Dispute?
+  orderItems         OrderItem[]
+  review             Review?
+  masterOrder        MasterOrder         @relation(fields: [masterOrderId], references: [id], map: "SubOrder_masterOrderId_fkey")
+  seller             User                @relation(fields: [sellerId], references: [id], map: "SubOrder_sellerId_fkey")
+  walletTransactions WalletTransaction[]
+
+  @@index([masterOrderId], map: "SubOrder_masterOrderId_fkey")
+  @@index([sellerId], map: "SubOrder_sellerId_fkey")
+  @@map("suborder")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  subOrderId String   @unique(map: "Review_subOrderId_key")
+  bookId     String
+  rating     Int      @default(5)
+  comment    String?
+  createdAt  DateTime @default(now())
+  book       Book     @relation(fields: [bookId], references: [id], map: "Review_bookId_fkey")
+  subOrder   SubOrder @relation(fields: [subOrderId], references: [id], map: "Review_subOrderId_fkey")
+
+  @@index([bookId], map: "Review_bookId_fkey")
+  @@map("review")
+}
+
+model Dispute {
+  id          String        @id @default(uuid())
+  subOrderId  String        @unique(map: "Dispute_subOrderId_key")
+  reason      String
+  description String        @db.Text
+  images      String?       @db.Text
+  status      DisputeStatus @default(PENDING_SELLER)
+  sellerReply String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  subOrder    SubOrder      @relation(fields: [subOrderId], references: [id], map: "Dispute_subOrderId_fkey")
+
+  @@map("dispute")
+}
+
+model OrderItem {
+  id              String   @id @default(uuid())
+  subOrderId      String
+  bookId          String
+  quantity        Int
+  priceAtPurchase Decimal  @db.Decimal(15, 2)
+  book            Book     @relation(fields: [bookId], references: [id], map: "OrderItem_bookId_fkey")
+  subOrder        SubOrder @relation(fields: [subOrderId], references: [id], map: "OrderItem_subOrderId_fkey")
+
+  @@index([bookId], map: "OrderItem_bookId_fkey")
+  @@index([subOrderId], map: "OrderItem_subOrderId_fkey")
+  @@map("orderitem")
+}
+
+model Wallet {
+  id               String              @id @default(uuid())
+  userId           String              @unique(map: "Wallet_userId_key")
+  availableBalance Decimal             @default(0.00) @db.Decimal(15, 2)
+  escrowBalance    Decimal             @default(0.00) @db.Decimal(15, 2)
+  updatedAt        DateTime            @updatedAt
+  user             User                @relation(fields: [userId], references: [id], map: "Wallet_userId_fkey")
+  transactions     WalletTransaction[]
+
+  @@map("wallet")
+}
+
+model WalletTransaction {
+  id                  String          @id @default(uuid())
+  walletId            String
+  referenceSubOrderId String?
+  type                TransactionType
+  amount              Decimal         @db.Decimal(15, 2)
+  description         String?
+  createdAt           DateTime        @default(now())
+  subOrder            SubOrder?       @relation(fields: [referenceSubOrderId], references: [id], map: "WalletTransaction_referenceSubOrderId_fkey")
+  wallet              Wallet          @relation(fields: [walletId], references: [id], map: "WalletTransaction_walletId_fkey")
+
+  @@index([referenceSubOrderId], map: "WalletTransaction_referenceSubOrderId_fkey")
+  @@index([walletId], map: "WalletTransaction_walletId_fkey")
+  @@map("wallettransaction")
+}
+
+model Voucher {
+  id             String        @id @default(uuid())
+  code           String        @unique
+  description    String?
+  discountType   DiscountType  @default(PERCENTAGE)
+  discountValue  Decimal       @db.Decimal(15, 2)
+  minOrderAmount Decimal       @default(0.00) @db.Decimal(15, 2)
+  maxDiscount    Decimal?      @db.Decimal(15, 2)
+  expiryDate     DateTime?
+  usageLimit     Int           @default(100)
+  usedCount      Int           @default(0)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  masterOrders   MasterOrder[]
+
+  @@map("voucher")
+}
+
+enum BookCategory {
+  LITERATURE
+  CHILDRENS
+  COMICS
+  TEXTBOOK
+  ECONOMY
+  SKILLS
+  OTHERS
+
+  @@map("book_category")
+}
+
+enum Role {
+  ADMIN
+  USER
+
+  @@map("user_role")
+}
+
+enum BookCondition {
+  NEW_100
+  LIKE_NEW
+  GOOD
+  OLD
+
+  @@map("book_condition")
+}
+
+enum PaymentMethod {
+  VNPAY
+  MOMO
+  COD
+
+  @@map("masterorder_paymentMethod")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+
+  @@map("masterorder_paymentStatus")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  SHIPPING
+  DELIVERED
+  COMPLETED
+  DISPUTED
+  REFUNDED
+
+  @@map("suborder_status")
+}
+
+enum DisputeStatus {
+  PENDING_SELLER
+  PENDING_ADMIN
+  RESOLVED_REFUND
+  RESOLVED_PAY_SELLER
+  CLOSED
+
+  @@map("dispute_status")
+}
+
+enum TransactionType {
+  IN_ESCROW
+  ESCROW_RELEASE
+  DEDUCT_FEE
+  WITHDRAW_PENDING
+  WITHDRAW_SUCCESS
+  DIRECT_SALE
+  REFUND
+
+  @@map("wallettransaction_type")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+
+  @@map("discount_type")
+}
