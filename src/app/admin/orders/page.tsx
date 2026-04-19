@@ -14,12 +14,14 @@ import {
 } from "lucide-react";
 import { updateOrderStatus } from "@/lib/order-actions";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const session = await auth();
   const { status: statusFilter } = await searchParams;
 
   const orders = await prisma.subOrder.findMany({
@@ -181,7 +183,7 @@ export default async function AdminOrdersPage({
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex justify-center gap-2">
-                      {order.status === "PENDING" && (
+                      {order.status === "PENDING" && order.sellerId === session?.user?.id && (
                         <form action={async () => {
                           "use server";
                           await updateOrderStatus(order.id, "SHIPPING");

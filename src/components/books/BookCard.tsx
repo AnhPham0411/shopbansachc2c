@@ -75,7 +75,7 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
             <img 
               src={book.imageUrl} 
               alt={book.title} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain p-2 drop-shadow-xl group-hover:drop-shadow-2xl group-hover:-translate-y-1 transition-all duration-500"
               onError={(e) => {
                 (e.target as any).onerror = null;
                 (e.target as any).src = ""; 

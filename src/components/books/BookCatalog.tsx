@@ -90,17 +90,7 @@ export function BookCatalog({ initialBooks, initialSearch = "" }: { initialBooks
           <h1 className="text-5xl font-black text-zinc-900 mb-4 tracking-tight">Thư viện sách</h1>
           <p className="text-zinc-500 font-medium text-lg">Khám phá kho sách C2C đa dạng với giá hời.</p>
         </div>
-        
-        <div className="relative w-full md:w-96">
-          <input
-            type="text"
-            placeholder="Tìm theo tiêu đề sách..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-50 border border-zinc-100 rounded-2xl py-4 pl-12 pr-4 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none font-medium"
-          />
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-        </div>
+
       </div>
 
       <div className="flex flex-col lg:flex-row gap-12">

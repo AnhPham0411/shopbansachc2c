@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, CreditCard, ShieldAlert, Settings, BookOpen, Star, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, ShieldAlert, Settings, BookOpen, Star, ShoppingBag, Tag } from "lucide-react";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 
 export function AdminSidebar() {
@@ -27,6 +27,7 @@ export function AdminSidebar() {
         {[
           { name: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
           { name: "Sản phẩm", href: "/admin/books", icon: BookOpen },
+          { name: "Mã giảm giá", href: "/admin/vouchers", icon: Tag },
           { name: "Đơn hàng", href: "/admin/orders", icon: ShoppingBag },
           { name: "Người dùng", href: "/admin/users", icon: Users },
           { name: "Tài chính", href: "/admin/finance", icon: CreditCard },

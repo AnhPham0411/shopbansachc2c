@@ -5,6 +5,8 @@ import { Shield, RefreshCcw, Truck, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
+import { getActiveVouchers } from "@/lib/voucher-actions";
+import { Promotions } from "@/components/home/Promotions";
 
 export default async function Home() {
   const session = await auth();
@@ -24,10 +26,14 @@ export default async function Home() {
     price: Number(book.price)
   }));
 
+  const { vouchers } = await getActiveVouchers();
+
   return (
     <main className="flex flex-col min-h-screen bg-white">
       <Navbar />
       <Hero />
+      
+      {vouchers.length > 0 && <Promotions vouchers={vouchers} />}
       
       {/* Trust Badges */}
       <section className="py-12 border-y border-zinc-100 bg-[#F5F9F9]">

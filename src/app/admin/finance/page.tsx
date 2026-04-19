@@ -1,17 +1,25 @@
 import { prisma } from "@/lib/prisma";
 import { Wallet, ArrowUpRight, CheckCircle2, Clock, History, CreditCard } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { WithdrawModal } from "@/app/seller/wallet/WithdrawModal";
 import { approveWithdrawal } from "@/lib/finance-actions";
-import { revalidatePath } from "next/cache";
 
 export default async function AdminFinancePage() {
-  const transactions = await prisma.walletTransaction.findMany({
+  const session = await auth();
+  const userId = (session?.user as any)?.id;
+
+  const [transactions, wallet, user] = await Promise.all([
+    prisma.walletTransaction.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       wallet: {
         include: { user: { select: { name: true, email: true } } }
       }
     }
-  });
+    }),
+    userId ? prisma.wallet.findUnique({ where: { userId } }) : null,
+    userId ? prisma.user.findUnique({ where: { id: userId }, select: { bankAccountInfo: true } }) : null
+  ]);
 
   const pendingWithdrawals = transactions.filter(t => t.type === "WITHDRAW_PENDING");
   
@@ -22,21 +30,33 @@ export default async function AdminFinancePage() {
   });
   const totalRev = subOrderStats._sum.platformFee ? Number(subOrderStats._sum.platformFee) : 0;
 
+  const availableBalance = wallet ? Number(wallet.availableBalance) : 0;
 
   return (
     <div className="space-y-10">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
         <div>
           <h2 className="text-3xl font-black text-zinc-900 tracking-tight">Quản lý Tài chính</h2>
           <p className="text-zinc-500 font-medium">Theo dõi doanh thu và duyệt yêu cầu thanh khoản</p>
         </div>
-        <div className="glass px-6 py-4 rounded-2xl border-primary/20 bg-primary/5">
-           <p className="text-[10px] font-bold uppercase text-primary tracking-widest mb-1">Tổng doanh thu sàn</p>
-           <h3 className="text-2xl font-black text-primary">
-             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalRev)}
-           </h3>
+        <div className="flex gap-4">
+          <div className="glass px-6 py-4 rounded-2xl border-primary/20 bg-primary/5">
+            <p className="text-[10px] font-bold uppercase text-primary tracking-widest mb-1">Tổng doanh thu sàn</p>
+            <h3 className="text-2xl font-black text-primary">
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalRev)}
+            </h3>
+          </div>
+          <div className="glass px-6 py-4 rounded-2xl border-emerald-500/20 bg-emerald-500/5">
+            <p className="text-[10px] font-bold uppercase text-emerald-600 tracking-widest mb-1">Ví của bạn (Khả dụng)</p>
+            <h3 className="text-2xl font-black text-emerald-600">
+              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(availableBalance)}
+            </h3>
+          </div>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-10">
 
       {/* Pending Withdrawals */}
       <section className="space-y-6">
@@ -139,6 +159,20 @@ export default async function AdminFinancePage() {
           </table>
         </div>
       </section>
+        </div>
+        
+        {/* Right side: Admin Wallet panel */}
+        <div className="space-y-6">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-emerald-500" />
+            Rút tiền (Admin)
+          </h3>
+          <WithdrawModal 
+            availableBalance={availableBalance} 
+            bankAccountInfo={user?.bankAccountInfo || null} 
+          />
+        </div>
+      </div>
     </div>
   );
 }

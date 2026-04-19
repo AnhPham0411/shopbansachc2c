@@ -2,9 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export async function completeOrder(subOrderId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
     return await prisma.$transaction(async (tx) => {
       // 1. Get SubOrder details
       const subOrder = await tx.subOrder.findUnique({
@@ -14,6 +19,14 @@ export async function completeOrder(subOrderId: string) {
 
       if (!subOrder || subOrder.status === "COMPLETED") {
         throw new Error("Đơn hàng không hợp lệ hoặc đã hoàn thành");
+      }
+
+      // Authorization: Only Buyer (who received the book) or Admin (dispute resolution) can complete
+      const isAdmin = (session.user as any).role === "ADMIN";
+      const isBuyer = subOrder.masterOrder.buyerId === session.user.id;
+
+      if (!isAdmin && !isBuyer) {
+        throw new Error("Bạn không có quyền hoàn tất đơn hàng này");
       }
 
       // 2. Update status
@@ -64,11 +77,21 @@ export async function updateTrackingCode(subOrderId: string, formData: FormData)
   if (!trackingCode) return { error: "Mã vận đơn không được để trống" };
 
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
     const subOrder = await prisma.subOrder.findUnique({
       where: { id: subOrderId }
     });
 
-    if (!subOrder || subOrder.status !== "PACKED") {
+    if (!subOrder) throw new Error("Đơn hàng không tồn tại");
+    
+    // Authorization: Only Seller can update tracking
+    if (subOrder.sellerId !== session.user.id) {
+       throw new Error("Bạn không có quyền cập nhật mã vận đơn cho đơn hàng này");
+    }
+
+    if (subOrder.status !== "PACKED") {
       throw new Error("Chỉ có thể giao cho ship khi đơn hàng đã đóng gói thành công");
     }
 
@@ -86,11 +109,21 @@ export async function updateTrackingCode(subOrderId: string, formData: FormData)
 
 export async function confirmOrder(subOrderId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
     const subOrder = await prisma.subOrder.findUnique({
       where: { id: subOrderId }
     });
 
-    if (!subOrder || subOrder.status !== "PENDING") {
+    if (!subOrder) throw new Error("Đơn hàng không tồn tại");
+
+    // Authorization: Only Seller can confirm
+    if (subOrder.sellerId !== session.user.id) {
+      throw new Error("Bạn không có quyền xác nhận đơn hàng này");
+    }
+
+    if (subOrder.status !== "PENDING") {
       throw new Error("Chỉ có thể xác nhận đơn hàng đang chờ");
     }
 
@@ -107,11 +140,21 @@ export async function confirmOrder(subOrderId: string) {
 
 export async function packOrder(subOrderId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
     const subOrder = await prisma.subOrder.findUnique({
       where: { id: subOrderId }
     });
 
-    if (!subOrder || subOrder.status !== "CONFIRMED") {
+    if (!subOrder) throw new Error("Đơn hàng không tồn tại");
+
+    // Authorization: Only Seller can pack
+    if (subOrder.sellerId !== session.user.id) {
+      throw new Error("Bạn không có quyền đóng gói đơn hàng này");
+    }
+
+    if (subOrder.status !== "CONFIRMED") {
       throw new Error("Chỉ có thể đóng gói khi đơn hàng đã xác nhận thông tin");
     }
 
@@ -128,6 +171,21 @@ export async function packOrder(subOrderId: string) {
 
 export async function updateOrderStatus(subOrderId: string, status: any) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
+    const subOrder = await prisma.subOrder.findUnique({
+      where: { id: subOrderId }
+    });
+
+    if (!subOrder) throw new Error("Đơn hàng không tồn tại");
+
+    // Authorization: Only Seller or Admin can update status
+    const isAdmin = (session.user as any).role === "ADMIN";
+    if (subOrder.sellerId !== session.user.id && !isAdmin) {
+       throw new Error("Bạn không có quyền cập nhật trạng thái đơn hàng này");
+    }
+
     await prisma.subOrder.update({
       where: { id: subOrderId },
       data: { status },
@@ -143,6 +201,9 @@ export async function updateOrderStatus(subOrderId: string, status: any) {
 
 export async function cancelOrder(subOrderId: string) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
     return await prisma.$transaction(async (tx) => {
       // 1. Get SubOrder details with related info
       const subOrder = await tx.subOrder.findUnique({
@@ -153,7 +214,18 @@ export async function cancelOrder(subOrderId: string) {
         }
       });
 
-      if (!subOrder || subOrder.status !== "PENDING") {
+      if (!subOrder) throw new Error("Đơn hàng không tồn tại");
+
+      // Authorization: Only Seller, Buyer, or Admin can cancel
+      const isAdmin = (session.user as any).role === "ADMIN";
+      const isSeller = subOrder.sellerId === session.user.id;
+      const isBuyer = subOrder.masterOrder.buyerId === session.user.id;
+
+      if (!isAdmin && !isSeller && !isBuyer) {
+        throw new Error("Bạn không có quyền hủy đơn hàng này");
+      }
+
+      if (subOrder.status !== "PENDING" && !isAdmin) {
         throw new Error("Chỉ có thể hủy đơn hàng đang ở trạng thái chờ xác nhận");
       }
 
