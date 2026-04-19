@@ -111,11 +111,16 @@ export function WithdrawModal({ availableBalance, bankAccountInfo }: WithdrawFor
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <div className="flex justify-between items-center px-1">
-              <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Số tiền VNĐ</label>
-              <div className="flex items-center gap-2">
-                <Info size={12} className="text-zinc-500" />
-                <span className="text-[10px] text-zinc-500 font-bold uppercase">Min: 50k - Max: 10M</span>
+            <div className="flex justify-between items-end px-1">
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest block mb-1">Khả dụng</label>
+                <div className="text-sm font-black text-primary">
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(availableBalance)}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-zinc-500 pb-0.5">
+                <Info size={12} />
+                <span className="text-[10px] font-bold uppercase">Min: 50k - Max: 10M</span>
               </div>
             </div>
 
