@@ -21,7 +21,9 @@ model User {
   books           Book[]
   masterOrders    MasterOrder[]
   subOrders       SubOrder[]
-  wallets         Wallet?
+  wallets             Wallet?
+  buyerConversations  Conversation[] @relation("BuyerConversations")
+  sellerConversations Conversation[] @relation("SellerConversations")
 
   @@map("user")
 }
@@ -42,9 +44,42 @@ model Book {
   seller        User          @relation(fields: [sellerId], references: [id], map: "Book_sellerId_fkey")
   orderItems    OrderItem[]
   reviews       Review[]
+  conversations Conversation[]
 
   @@index([sellerId], map: "Book_sellerId_fkey")
   @@map("book")
+}
+
+model Conversation {
+  id          String    @id @default(uuid())
+  buyerId     String
+  sellerId    String
+  bookId      String?
+  lastMessage String?   @db.Text
+  lastMsgAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  buyer    User      @relation("BuyerConversations", fields: [buyerId], references: [id])
+  seller   User      @relation("SellerConversations", fields: [sellerId], references: [id])
+  book     Book?     @relation(fields: [bookId], references: [id])
+  messages Message[]
+
+  @@unique([buyerId, sellerId, bookId])
+  @@map("conversation")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("message")
 }
 
 model MasterOrder {

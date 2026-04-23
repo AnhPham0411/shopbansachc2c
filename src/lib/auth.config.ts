@@ -46,7 +46,7 @@ export const authConfig = {
       }
 
       // Seller dashboard protection - Allow all logged in users
-      if (nextUrl.pathname.startsWith("/seller")) {
+      if (nextUrl.pathname.startsWith("/seller") || nextUrl.pathname.startsWith("/chat")) {
         return isLoggedIn;
       }
 

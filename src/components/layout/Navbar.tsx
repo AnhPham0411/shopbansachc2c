@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List } from "lucide-react";
+import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { LogoutButton } from "./LogoutButton";
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 export function Navbar() {
   const { data: session } = useSession();
   const [cartCount, setCartCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
@@ -37,6 +38,24 @@ export function Navbar() {
     window.addEventListener("cart-updated", updateCount);
     return () => window.removeEventListener("cart-updated", updateCount);
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      const fetchUnread = async () => {
+        try {
+          const res = await fetch("/api/chat/unread");
+          if (res.ok) {
+            const data = await res.json();
+            setUnreadChatCount(data.count);
+          }
+        } catch (error) {}
+      };
+
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 15000); // 15s
+      return () => clearInterval(interval);
+    }
+  }, [session]);
 
   const getDashboardLink = () => {
     const role = (session?.user as any)?.role;
@@ -134,6 +153,17 @@ export function Navbar() {
                 </span>
               )}
             </Link>
+
+            {session && (
+              <Link href="/chat" className="relative p-2 text-zinc-600 hover:bg-zinc-50 rounded-full transition-all">
+                <MessageSquare className="w-6 h-6" />
+                {unreadChatCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                    {unreadChatCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             <Link 
               href={sellLink} 
