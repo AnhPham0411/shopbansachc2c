@@ -1,0 +1,30 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Công nghệ phát triển ứng dụng Web}
+
+\subsection{Next.js Framework}
+Dự án sử dụng Next.js (phiên bản 16+) làm khung làm việc chính. Next.js cung cấp các tính năng ưu việt cho một sàn TMĐT:
+\begin{itemize}
+    \item \textbf{App Router:} Quản lý routing linh hoạt và hỗ trợ Server Components giúp tăng tốc độ tải trang đầu tiên.
+    \item \textbf{Server-Side Rendering (SSR):} Cần thiết cho SEO để các cuốn sách của người bán dễ dàng được tìm thấy trên Google.
+    \item \textbf{API Routes:} Xử lý trực tiếp các tác vụ logic phía Server mà không cần một Backend riêng biệt.
+\end{itemize}
+
+\subsection{Prisma ORM và MySQL}
+Thay vì sử dụng SQL thuần, dự án sử dụng Prisma để quản lý dữ liệu:
+\begin{itemize}
+    \item \textbf{Type-safety:} Đảm bảo tính nhất quán giữa code TypeScript và cấu trúc Database.
+    \item \textbf{Migrations:} Dễ dàng theo dõi sự thay đổi của cấu trúc cơ sở dữ liệu trong suốt quá trình phát triển.
+    \item \textbf{MySQL:} Một hệ quản trị cơ sở dữ liệu mạnh mẽ, ổn định, đáp ứng tốt cho các giao dịch tài chính.
+\end{itemize}
+
+\section{Cổng thanh toán và Bảo mật}
+
+\subsection{Cổng thanh toán VNPay}
+VNPay được chọn làm giải pháp thanh toán chính nhờ tính phổ biến và độ tin cậy cao tại Việt Nam. Quy trình thanh toán bao gồm việc ký hash dữ liệu để đảm bảo thông tin số tiền và mã đơn hàng không bị thay đổi trong quá trình chuyển hướng trang.
+
+\subsection{Xác thực và Phân quyền}
+Sử dụng thư viện Auth.js (NextAuth) để quản lý phiên đăng nhập của người dùng. Hệ thống phân cấp rõ ràng giữa người bán (Seller), người mua (Buyer) và quản trị viên (Admin) thông qua Middleware của Next.js.
+
+\end{document}

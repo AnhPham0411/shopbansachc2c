@@ -9,9 +9,13 @@ export const authConfig = {
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        token.points = (user as any).points;
+        token.rank = (user as any).rank;
       }
-      if (trigger === "update" && session?.role) {
-        token.role = session.role;
+      if (trigger === "update") {
+        if (session?.role) token.role = session.role;
+        if (session?.points !== undefined) token.points = session.points;
+        if (session?.rank) token.rank = session.rank;
       }
       return token;
     },
@@ -19,6 +23,8 @@ export const authConfig = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).points = token.points;
+        (session.user as any).rank = token.rank;
       }
       return session;
     },

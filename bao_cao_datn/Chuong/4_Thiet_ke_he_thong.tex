@@ -1,0 +1,289 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Kiến trúc dữ liệu (Database Design)}
+Hệ thống sử dụng MySQL làm cơ sở dữ liệu quan hệ cốt lõi. Điểm khác biệt lớn nhất trong thiết kế của Libris là việc áp dụng mô hình \textbf{Kế toán Sổ cái (Ledger)} kết hợp với cơ chế tách đơn hàng cha - con. Điều này giúp hệ thống quản lý dòng tiền với độ chính xác tuyệt đối, tránh tình trạng sai lệch số dư.
+
+\subsection{Các thực thể chính và mối quan hệ}
+\begin{itemize}
+    \item \textbf{Cụm Người dùng và Sản phẩm:}
+        \begin{itemize}
+            \item \texttt{User}: Quản lý thông tin định danh và vai trò. Đặc biệt, mỗi người dùng được liên kết với một bản ghi \texttt{Wallet} duy nhất ngay khi đăng ký.
+            \item \texttt{Book}: Lưu trữ chi tiết sách. Quan trọng nhất là trường \texttt{condition} (Enum) để xác định giá trị và \texttt{sellerId} để phục vụ luồng tách đơn hàng.
+        \end{itemize}
+    \item \textbf{Cụm Đơn hàng (Cart Splitting Architecture):}
+        \begin{itemize}
+            \item \texttt{MasterOrder}: Đóng vai trò là đơn hàng "bao", lưu tổng giá trị giao dịch mà khách hàng phải trả cho VNPay.
+            \item \texttt{SubOrder}: Các đơn hàng thành phần được tách ra dựa trên \texttt{sellerId}. Mỗi đơn hàng con có hành trình vận chuyển (\texttt{status}) và mã vận đơn riêng.
+            \item \texttt{OrderItem}: Lưu \texttt{price\_at\_purchase} để đảm bảo tính minh bạch nếu người bán thay đổi giá sau khi khách đã đặt.
+        \end{itemize}
+    \item \textbf{Cụm Ví điện tử và Sổ cái (Wallet \& Ledger):}
+        \begin{itemize}
+            \item \texttt{Wallet}: Lưu trữ hai trạng thái tiền: \texttt{availableBalance} (tiền thực) và \texttt{escrowBalance} (tiền ảo đang đợi đối soát).
+            \item \texttt{WalletTransaction}: Bảng sao kê chi tiết. Mọi hành động cộng/trừ tiền đều phải sinh ra bản ghi tại đây kèm theo tham chiếu (\texttt{referenceId}) tới đơn hàng tương ứng.
+        \end{itemize}
+    \item \textbf{Cụm Tương tác và Loyalty:}
+        \begin{itemize}
+            \item \texttt{Favorite}: Quản lý danh sách sách yêu thích của người dùng.
+            \item \texttt{Review}: Lưu trữ đánh giá của người mua và phản hồi (reply) từ người bán.
+            \item \texttt{Message}: Quản lý nội dung chat giữa người mua và người bán, đồng thời hỗ trợ Admin giám sát khi có tranh chấp.
+        \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/database_erd.png}
+    \caption{Sơ đồ thực thể liên kết (ERD) của hệ thống Libris}
+    \label{fig:erd_system}
+\end{figure}
+
+\subsection{Sơ đồ Lớp (Class Diagram / Domain Model)}
+Sơ đồ lớp (Hình \ref{fig:class_diagram}) mô hình hóa các đối tượng cốt lõi trong hệ thống theo phương pháp hướng đối tượng (OOP). Nó thể hiện rõ các thuộc tính, phương thức và mối quan hệ giữa Người dùng (\texttt{User}), Ví điện tử (\texttt{Wallet}), Sách (\texttt{Book}) và Đơn hàng (\texttt{Order}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/class_diagram.png}
+    \caption{Sơ đồ Lớp (Domain Model) hệ thống Libris}
+    \label{fig:class_diagram}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể MasterOrder (Đơn hàng tổng)}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã định danh duy nhất \\ \hline
+\texttt{totalPayment} & Int & Tổng số tiền khách hàng thanh toán \\ \hline
+\texttt{paymentStatus} & Enum & Trạng thái: PENDING, PAID, FAILED \\ \hline
+\texttt{transactionId} & String & Mã giao dịch từ cổng VNPay \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể SubOrder (Đơn hàng con)}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã định danh đơn hàng con \\ \hline
+\texttt{sellerId} & String (FK) & Liên kết tới người bán \\ \hline
+\texttt{subTotal} & Int & Tiền sách của riêng shop này \\ \hline
+\texttt{netAmount} & Int & Tiền thực nhận của Seller (sau phí) \\ \hline
+\texttt{status} & Enum & Trạng thái: SHIPPING, COMPLETED, DISPUTED \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể User (Người dùng)}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã định danh người dùng \\ \hline
+\texttt{role} & Enum & Quyền hạn (ADMIN, USER) \\ \hline
+\texttt{email} & String & Địa chỉ email (duy nhất) \\ \hline
+\texttt{points} & Int & Điểm tích lũy (Loyalty points) \\ \hline
+\texttt{rank} & Enum & Hạng thành viên (BRONZE, SILVER, GOLD, PLATINUM) \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể Book (Sản phẩm Sách)}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã định danh sách \\ \hline
+\texttt{sellerId} & String (FK) & Liên kết tới người bán \\ \hline
+\texttt{title} & String & Tên cuốn sách \\ \hline
+\texttt{price} & Decimal & Giá bán \\ \hline
+\texttt{stockQuantity} & Int & Số lượng tồn kho \\ \hline
+\texttt{condition} & Enum & Tình trạng sách (NEW\_100, LIKE\_NEW, GOOD, OLD) \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể Wallet (Ví điện tử)}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã định danh ví \\ \hline
+\texttt{userId} & String (FK) & Liên kết tới chủ ví \\ \hline
+\texttt{availableBalance} & Decimal & Số dư khả dụng (tiền thực tế có thể rút) \\ \hline
+\texttt{escrowBalance} & Decimal & Số dư đang bị giam (chờ đối soát giao hàng) \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể WalletTransaction (Giao dịch Ví)}
+\begin{tabular}{|l|l|p{7.5cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String(PK) & Mã giao dịch \\ \hline
+\texttt{walletId} & String(FK) & Liên kết tới ví \\ \hline
+\texttt{type} & Enum & Loại giao dịch (IN\_ESCROW, RELEASE, REFUND...) \\ \hline
+\texttt{amount} & Decimal & Số tiền giao dịch \\ \hline
+\texttt{referenceSubOrderId} & String(FK) & Tham chiếu đơn hàng con phát sinh giao dịch \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể Dispute (Khiếu nại)}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã khiếu nại \\ \hline
+\texttt{subOrderId} & String (FK) & Đơn hàng bị khiếu nại \\ \hline
+\texttt{reason} & String & Lý do khiếu nại ngắn gọn \\ \hline
+\texttt{status} & Enum & Trạng thái (PENDING\_SELLER, RESOLVED\_REFUND...) \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Mô tả thực thể Review (Đánh giá)}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Trường dữ liệu} & \textbf{Kiểu dữ liệu} & \textbf{Mô tả} \\ \hline
+\texttt{id} & String (PK) & Mã đánh giá \\ \hline
+\texttt{userId} & String (FK) & Người đánh giá (Người mua) \\ \hline
+\texttt{bookId} & String (FK) & Sách được đánh giá \\ \hline
+\texttt{rating} & Int & Điểm số (1-5 sao) \\ \hline
+\texttt{comment} & String & Nội dung đánh giá \\ \hline
+\texttt{reply} & String & Phản hồi từ người bán \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Thiết kế luồng xử lý hệ thống}
+Hệ thống ưu tiên tính toàn vẹn (Consistency) hơn tính khả dụng (Availability) trong các luồng tài chính.
+
+\subsection{Xác thực người dùng (Auth Sequence Diagram)}
+Việc xác thực và phân quyền được thực hiện thông qua thư viện \texttt{NextAuth.js}, đảm bảo an toàn và tối ưu hóa việc quản lý phiên làm việc.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/sequence_auth.png}
+    \caption{Sơ đồ tuần tự quá trình Đăng nhập (Authentication)}
+    \label{fig:sequence_auth}
+\end{figure}
+
+\subsection{Luồng Đặt hàng và Thanh toán Escrow (Activity Diagram)}
+Quá trình thanh toán là luồng phức tạp nhất do phải xử lý cơ chế tách đơn hàng (Cart Splitting) và khóa tồn kho mềm (Soft-lock).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/activity_checkout.png}
+    \caption{Sơ đồ hoạt động (Activity Diagram) luồng Đặt hàng \& Thanh toán}
+    \label{fig:activity_checkout}
+\end{figure}
+
+\subsection{Luồng Xử lý Khiếu nại (Dispute Activity Diagram)}
+Tranh chấp là rủi ro lớn nhất trong C2C. Sơ đồ Hình \ref{fig:activity_dispute} mô tả cách hệ thống đóng băng tiền và sự can thiệp của Admin như một trọng tài.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/activity_dispute.png}
+    \caption{Sơ đồ hoạt động luồng Giải quyết Khiếu nại (Dispute Resolution)}
+    \label{fig:activity_dispute}
+\end{figure}
+
+\subsection{Luồng Tương tác Khách hàng thân thiết và Đánh giá}
+Hệ thống tích hợp cơ chế \textbf{Loyalty} để giữ chân người dùng:
+\begin{itemize}
+    \item \textbf{Tích điểm và Thăng hạng:} Khi người dùng hoàn thành giao dịch, hệ thống tự động cộng điểm (\texttt{points}) dựa trên giá trị đơn hàng. Điểm số này sẽ quyết định hạng thành viên (\texttt{rank} như BRONZE, SILVER, GOLD), qua đó người dùng nhận được các ưu đãi về phí nền tảng hoặc phí vận chuyển.
+    \item \textbf{Yêu thích sách (Favorites):} Cho phép người dùng lưu lại các cuốn sách quan tâm để theo dõi giá và tình trạng tồn kho.
+    \item \textbf{Đánh giá và Phản hồi:} Sau khi đơn hàng hoàn tất, người mua có quyền để lại số sao và bình luận (\texttt{Review}). Người bán được cung cấp tính năng \textbf{Review Replies} để phản hồi lại các đánh giá này, tăng tính tương tác và uy tín của gian hàng.
+\end{itemize}
+
+\subsection{Cơ chế Giám sát Hội thoại (Admin Chat Monitoring)}
+Trong một hệ thống C2C, việc giao tiếp giữa người mua và người bán rất dễ phát sinh thỏa thuận ngầm nhằm trốn phí sàn. Hệ thống cho phép \textbf{Admin giám sát nội dung chat} giữa các bên, đặc biệt trong các trường hợp xảy ra khiếu nại (Dispute), nội dung chat là bằng chứng quan trọng nhất để Admin đưa ra phán quyết phân xử cuối cùng.
+
+\subsection{Vòng đời Đơn hàng (State Machine Diagram)}
+Mỗi đơn hàng trong hệ thống Libris đều tuân thủ một vòng đời nghiêm ngặt để đảm bảo an toàn cho ví Escrow của người bán.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/state_machine_order.png}
+    \caption{Sơ đồ trạng thái (State Machine) vòng đời Đơn hàng}
+    \label{fig:state_machine_order}
+\end{figure}
+
+\subsection{Luồng thanh toán Escrow và Tách đơn}
+Khi khách hàng hoàn tất thanh toán trên VNPay, hệ thống thực thi một chuỗi các thao tác \textbf{Atomic} trong một Database Transaction duy nhất để tránh tình trạng dữ liệu "mồ côi":
+\begin{enumerate}
+    \item \textbf{Cập nhật đơn hàng:} Chuyển \texttt{MasterOrder} sang trạng thái \texttt{PAID}.
+    \item \textbf{Khởi tạo Escrow:}
+    \begin{itemize}
+        \item Hệ thống tính toán \texttt{platform\_fee} (10\%) và cộng ngay vào \texttt{availableBalance} của ví Admin.
+        \item Tính toán \texttt{net\_amount} (90\%) và cộng vào \texttt{escrowBalance} của người bán.
+    \end{itemize}
+    \item \textbf{Ghi nhật ký kép (Double-entry):} Tạo đồng thời 2 bản ghi \texttt{WalletTransaction} cho Admin (loại \texttt{FEE}) và Seller (loại \texttt{IN\_ESCROW}).
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/sequence_payment.png}
+    \caption{Sơ đồ tuần tự luồng thanh toán Escrow và tách đơn hàng}
+    \label{fig:sequence_payment}
+\end{figure}
+
+\subsection{Luồng Rút tiền của Người bán (Cash-out Sequence Diagram)}
+Để ngăn chặn rửa tiền và các lỗi hệ thống, luồng rút tiền yêu cầu sự phê duyệt thủ công (Manual Settlement) từ Admin (Hình \ref{fig:sequence_cashout}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/sequence_cashout.png}
+    \caption{Sơ đồ tuần tự quy trình Rút tiền (Cash-out)}
+    \label{fig:sequence_cashout}
+\end{figure}
+
+\subsection{Luồng giải ngân và Đối soát cuối kỳ}
+Quy trình giải ngân (\texttt{ESCROW\_RELEASE}) được kích hoạt tự động hoặc thủ công:
+\begin{enumerate}
+    \item Hệ thống kiểm tra số dư trong \texttt{escrowBalance} của người bán tương ứng với đơn hàng.
+    \item Thực hiện trừ \texttt{escrowBalance} và cộng vào \texttt{availableBalance}. 
+    \item Tạo bản ghi giao dịch loại \texttt{RELEASE} để lưu vết.
+    \item Cập nhật trạng thái đơn hàng con thành \texttt{COMPLETED}.
+\end{enumerate}
+
+\section{Kiến trúc hệ thống (System Architecture)}
+Hệ thống Libris được thiết kế theo mô hình kiến trúc hiện đại, tận dụng tối đa sức mạnh của Server-Side Rendering và API-first design.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/architecture_diagram.png}
+    \caption{Kiến trúc tổng thể hệ thống Libris}
+    \label{fig:system_architecture}
+\end{figure}
+
+\subsection{Mô hình Triển khai (Deployment Diagram)}
+Sơ đồ triển khai (Hình \ref{fig:deployment}) mô tả cách thức hệ thống được phân phối trên các hạ tầng vật lý và dịch vụ đám mây (Cloud Services).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/deployment_diagram.png}
+    \caption{Sơ đồ triển khai hệ thống (Deployment Diagram)}
+    \label{fig:deployment}
+\end{figure}
+
+Các thành phần cốt lõi bao gồm:
+\begin{itemize}
+    \item \textbf{Tầng Giao diện (Frontend):} Xây dựng bằng React và Tailwind CSS, giao tiếp với Backend thông qua các Server Actions và RESTful APIs.
+    \item \textbf{Tầng Xử lý (Backend):} Chạy trên nền tảng Next.js Server, đảm nhận vai trò điều phối luồng dữ liệu, xử lý thanh toán và quản lý phiên làm việc.
+    \item \textbf{Tầng Dữ liệu (Database):} MySQL đóng vai trò lưu trữ bền vững, được Prisma ORM quản lý để đảm bảo tính an toàn về kiểu dữ liệu.
+    \item \textbf{Tầng Dịch vụ bên thứ ba:} Cổng VNPay hỗ trợ thanh toán và các đơn vị vận chuyển hỗ trợ cập trạng thái đơn hàng.
+\end{itemize}
+
+\section{Thiết kế giao diện người dùng (UI/UX)}
+Giao diện của Libris được thiết kế theo phong cách tối giản (Minimalism), ưu tiên sự rõ ràng trong các thông số tài chính:
+\begin{itemize}
+    \item \textbf{Dashboard Người bán:} Tập trung vào biểu đồ tăng trưởng doanh thu và công cụ quản lý sách cũ trực quan.
+    \item \textbf{Arbitration Center (Admin):} Giao diện chuyên biệt để xem xét bằng chứng tranh chấp, cho phép Admin so sánh ảnh chụp của người mua và người bán cạnh nhau để đưa ra phán quyết.
+    \item \textbf{Trải nghiệm Checkout:} Tối ưu hóa luồng người dùng để việc tách đơn hàng từ nhiều shop diễn ra tự nhiên, hiển thị rõ ràng phí ship của từng đơn con để khách hàng không bị bối rối.
+\end{itemize}
+
+\end{document}

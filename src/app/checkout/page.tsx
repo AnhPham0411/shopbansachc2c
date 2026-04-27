@@ -25,6 +25,7 @@ type PaymentMethod = "COD" | "VNPAY" | "MOMO";
 
 export default function CheckoutPage() {
   const { cart, total, clearCart, isLoaded } = useCart();
+  const { data: session } = useSession();
   const router = useRouter();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -95,8 +96,7 @@ export default function CheckoutPage() {
     if (!codeToUse) return;
     setVoucherError("");
     
-    // In demo, we use a placeholder userId
-    const result = await validateVoucher(codeToUse, "current-user-id", total);
+    const result = await validateVoucher(codeToUse, session?.user?.id as string, total);
     if (result.success) {
       setAppliedVoucher({
         code: result.code!,
@@ -567,7 +567,11 @@ export default function CheckoutPage() {
                       </div>
                     ) : (
                       availableVouchers.map((v) => {
-                        const isEligible = total >= v.minOrderAmount;
+                        const userRank = (session?.user as any)?.rank || "BRONZE";
+                        const ranks = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
+                        const isRankEligible = ranks.indexOf(userRank) >= ranks.indexOf(v.minRank || "BRONZE");
+                        const isAmountEligible = total >= v.minOrderAmount;
+                        const isEligible = isRankEligible && isAmountEligible;
                         const shortDesc = v.discountType === "PERCENTAGE" 
                           ? `Giảm ${v.discountValue}%` 
                           : `Giảm ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.discountValue)}`;
@@ -590,9 +594,14 @@ export default function CheckoutPage() {
                                  <span className="bg-secondary/10 text-secondary text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Limited</span>
                                </div>
                                <p className="text-xs font-bold text-zinc-900 leading-snug">{v.description}</p>
-                               {!isEligible && (
+                               {!isAmountEligible && (
                                  <p className="text-[10px] text-red-500 font-black mt-2 uppercase tracking-wider">
                                    Cần mua thêm {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.minOrderAmount - total)}
+                                 </p>
+                               )}
+                               {!isRankEligible && (
+                                 <p className="text-[10px] text-red-500 font-black mt-2 uppercase tracking-wider">
+                                   Cần hạng {v.minRank} trở lên
                                  </p>
                                )}
                             </div>

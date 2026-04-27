@@ -35,6 +35,29 @@ export async function completeOrder(subOrderId: string) {
         data: { status: "COMPLETED" },
       });
 
+      // 2.5 Award Points to Buyer (1 point per 1000 VND)
+      const pointsEarned = Math.floor(Number(subOrder.subTotal) / 1000);
+      const buyer = await tx.user.findUnique({
+        where: { id: subOrder.masterOrder.buyerId },
+        select: { points: true }
+      });
+
+      if (buyer) {
+        const newPoints = buyer.points + pointsEarned;
+        let newRank = "BRONZE";
+        if (newPoints >= 10000) newRank = "PLATINUM";
+        else if (newPoints >= 5000) newRank = "GOLD";
+        else if (newPoints >= 1000) newRank = "SILVER";
+
+        await tx.user.update({
+          where: { id: subOrder.masterOrder.buyerId },
+          data: {
+            points: newPoints,
+            rank: newRank as any
+          }
+        });
+      }
+
       // 3. Update Seller Wallet (Release Escrow)
       const admin = await tx.user.findFirst({ where: { role: "ADMIN" } });
       const isSellerAdmin = admin && subOrder.sellerId === admin.id;

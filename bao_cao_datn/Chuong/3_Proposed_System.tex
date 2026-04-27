@@ -1,0 +1,33 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Yêu cầu nghiệp vụ đặc thù của sàn C2C}
+Khác với các sàn B2C truyền thống, mô hình C2C (Customer-to-Customer) đòi hỏi hệ thống phải giải quyết được bài toán về lòng tin và sự minh bạch trong dòng tiền. Qua khảo sát thực tế, dự án xác định các yêu cầu cốt lõi:
+\begin{itemize}
+    \item \textbf{Cơ chế bảo vệ người mua:} Tiền không được chuyển trực tiếp cho người bán ngay khi thanh toán mà phải qua bước trung gian.
+    \item \textbf{Xử lý giỏ hàng đa người bán:} Một khách hàng có thể mua nhiều cuốn sách từ các cá nhân khác nhau trong một lần thanh toán duy nhất.
+    \item \textbf{Tự động hóa đối soát:} Hệ thống tự động tính toán phí nền tảng và doanh thu thực nhận cho người bán.
+\end{itemize}
+
+\section{Giải pháp kỹ thuật đề xuất}
+
+\subsection{Luồng thanh toán và Tách đơn hàng (Cart Splitting)}
+Hệ thống sử dụng mô hình đơn hàng hai cấp: \textbf{MasterOrder} (Đơn hàng tổng) và \textbf{SubOrder} (Đơn hàng con).
+\begin{itemize}
+    \item Khi khách hàng ấn nút "Thanh toán", hệ thống sẽ nhóm các mặt hàng theo \texttt{sellerId}.
+    \item Một \texttt{MasterOrder} duy nhất được tạo ra để ghi nhận tổng số tiền khách hàng phải trả (sau khi đã áp dụng mã giảm giá toàn sàn).
+    \item Từ đơn hàng tổng này, hệ thống tự động sinh ra các \texttt{SubOrder} tương ứng với từng người bán để họ có thể theo dõi và thực hiện đóng gói, giao hàng.
+\end{itemize}
+
+\subsection{Cơ chế Escrow và Phân bổ doanh thu}
+Dự án đề xuất mô hình phân bổ 90/10:
+\begin{itemize}
+    \item \textbf{Hoa hồng sàn (10\%):} Được tính dựa trên giá trị sau giảm giá của đơn hàng con và được cộng trực tiếp vào ví khả dụng (\texttt{availableBalance}) của Quản trị viên (Admin).
+    \item \textbf{Doanh thu người bán (90\%):} Được đưa vào trạng thái "Giam tiền" (\texttt{escrowBalance}). Tiền này chỉ được chuyển sang ví khả dụng khi đơn hàng chuyển trạng thái \texttt{COMPLETED}.
+    \item \textbf{Tính lũy đẳng (Idempotency):} Đảm bảo mỗi giao dịch thanh toán chỉ được xử lý đúng một lần thông qua việc kiểm tra \texttt{paymentStatus} trước khi thực hiện các logic chia tiền.
+\end{itemize}
+
+\subsection{Xử lý mã giảm giá (Voucher) theo tỷ lệ}
+Khi có mã giảm giá áp dụng cho toàn bộ giỏ hàng, số tiền giảm giá sẽ được phân bổ (pro-rated) cho từng người bán dựa trên giá trị đơn hàng của họ. Điều này đảm bảo tính công bằng khi tính toán phí sàn và doanh thu thực nhận.
+
+\end{document}

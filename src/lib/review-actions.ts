@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth";
 
 /**
  * Đăng đánh giá cho sách sau khi nhận hàng thành công
@@ -56,6 +57,47 @@ export async function deleteReview(reviewId: string) {
     });
     revalidatePath(`/books/${review.bookId}`);
     revalidatePath("/admin/reviews");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Phản hồi đánh giá (Người bán hoặc Admin)
+ */
+export async function replyToReview(reviewId: string, content: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Chưa đăng nhập");
+
+    const userId = session.user.id;
+    const role = (session.user as any).role;
+
+    const review = await prisma.review.findUnique({
+      where: { id: reviewId },
+      include: { 
+        book: {
+          select: { id: true, sellerId: true }
+        }
+      }
+    });
+
+    if (!review) throw new Error("Đánh giá không tồn tại");
+
+    if (role !== "ADMIN" && review.book.sellerId !== userId) {
+      throw new Error("Bạn không có quyền phản hồi đánh giá này");
+    }
+
+    await prisma.reviewReply.create({
+      data: {
+        reviewId,
+        userId,
+        content,
+      }
+    });
+
+    revalidatePath(`/books/${review.book.id}`);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

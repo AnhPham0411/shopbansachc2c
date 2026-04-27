@@ -1,0 +1,139 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/use_case_diagram.png}
+    \caption{Sơ đồ Use Case tổng quát hệ thống Libris}
+    \label{fig:use_case_diagram}
+\end{figure}
+
+\section{Đặc tả Use Case: Đặt hàng đa shop (Cart Splitting)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Người mua thực hiện thanh toán một giỏ hàng chứa sản phẩm từ nhiều người bán khác nhau. Hệ thống tự động xử lý tách dòng tiền và đơn hàng.
+    \item \textbf{Tác nhân:} Người mua (Buyer).
+    \item \textbf{Tiền điều kiện:} Người mua đã đăng nhập và có sản phẩm trong giỏ hàng.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người mua truy cập trang thanh toán (Checkout).
+            \item Hệ thống nhóm các đầu sách theo \texttt{sellerId} và tính toán phí vận chuyển riêng cho từng đơn con (\texttt{SubOrder}).
+            \item Người mua chọn phương thức VNPay và nhấn "Thanh toán".
+            \item Hệ thống tạo bản ghi \texttt{MasterOrder} ở trạng thái \texttt{PENDING}.
+            \item Người mua thực hiện giao dịch trên cổng thanh toán.
+            \item Sau khi nhận tín hiệu thành công (IPN), hệ thống tự động sinh các \texttt{SubOrder} và phân bổ tiền vào ví \texttt{escrowBalance} của từng người bán.
+        \end{enumerate}
+    \item \textbf{Ngoại lệ:} Giao dịch thất bại tại VNPay $\rightarrow$ Hệ thống hủy \texttt{MasterOrder} và giải phóng tồn kho sách (\texttt{Soft-lock release}).
+    \item \textbf{Hậu điều kiện:} Đơn hàng được xác nhận, thông báo được gửi tới các người bán liên quan.
+\end{itemize}
+
+\section{Đặc tả Use Case: Giải quyết tranh chấp (Dispute Resolution)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Xử lý khiếu nại của người mua khi nhận sách không đúng mô tả.
+    \item \textbf{Tác nhân:} Người mua, Người bán, Admin.
+    \item \textbf{Tiền điều kiện:} Đơn hàng ở trạng thái \texttt{DELIVERED} và còn trong thời hạn khiếu nại (3 ngày).
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người mua nhấn "Khiếu nại" và chọn lý do (rách sách, sách giả, sai sách).
+            \item Hệ thống yêu cầu tải lên bằng chứng (ảnh/video).
+            \item Hệ thống lập tức thay đổi trạng thái tiền trong ví Seller từ \texttt{escrowBalance} sang \texttt{frozenBalance} (Đóng băng).
+            \item Admin nhận thông báo và truy cập trang quản trị Tranh chấp.
+            \item Admin xem xét bằng chứng và đưa ra quyết định:
+            \begin{itemize}
+                \item Chấp nhận khiếu nại: Hoàn tiền 100\% vào ví người mua.
+                \item Từ chối khiếu nại: Giải ngân tiền cho người bán.
+            \end{itemize}
+        \end{enumerate}
+    \item \textbf{Hậu điều kiện:} Tiền được giải tỏa về ví của bên thắng cuộc. Trạng thái đơn hàng chuyển thành \texttt{DISPUTED\_RESOLVED}.
+\end{itemize}
+
+\section{Đặc tả Use Case: Rút tiền (Cash-out)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Người bán thực hiện rút doanh thu tích lũy về tài khoản ngân hàng thực tế.
+    \item \textbf{Tác nhân:} Người bán, Admin.
+    \item \textbf{Tiền điều kiện:} Số dư ví khả dụng (\texttt{availableBalance}) $\geq$ số tiền yêu cầu.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người bán nhập số tiền và chọn tài khoản ngân hàng đích.
+            \item Hệ thống trừ số dư ví và tạo yêu cầu \texttt{WithdrawalRequest} (Trạng thái \texttt{PENDING}).
+            \item Admin nhận thông báo, thực hiện lệnh chuyển khoản trên Internet Banking bên ngoài.
+            \item Admin quay lại hệ thống, tải lên ảnh chụp biên lai chuyển khoản (không bắt buộc) và nhấn "Đã thanh toán".
+            \item Hệ thống cập nhật yêu cầu sang \texttt{SUCCESS} và gửi thông báo cho người bán.
+        \end{enumerate}
+    \item \textbf{Ngoại lệ:} Admin phát hiện gian lận $\rightarrow$ Từ chối yêu cầu và hoàn lại tiền vào ví người bán.
+\end{itemize}
+
+\section{Đặc tả Use Case: Quản lý ví và Đối soát (Wallet Management)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Người dùng theo dõi biến động số dư và lịch sử giao dịch chi tiết.
+    \item \textbf{Tác nhân:} Mọi người dùng.
+    \item \textbf{Tiền điều kiện:} Đã đăng nhập vào hệ thống.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người dùng truy cập trang "Ví của tôi".
+            \item Hệ thống truy vấn bảng \texttt{Wallet} để lấy số dư hiện tại.
+            \item Hệ thống truy vấn bảng \texttt{WalletTransaction} để liệt kê 10 giao dịch gần nhất.
+            \item Người dùng có thể lọc giao dịch theo loại (Thu nhập, Rút tiền, Phí sàn, Hoàn tiền).
+        \end{enumerate}
+    \item \textbf{Hậu điều kiện:} Mọi biến động dòng tiền dù nhỏ nhất (ví dụ: phí sàn 1\%) đều phải được hiển thị minh bạch.
+\end{itemize}
+
+\section{Đặc tả Use Case: Đánh giá và Phản hồi (Rating \& Review Replies)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Người mua để lại đánh giá cho sản phẩm và người bán có thể phản hồi lại các đánh giá đó.
+    \item \textbf{Tác nhân:} Người mua, Người bán.
+    \item \textbf{Tiền điều kiện:} Đơn hàng đã ở trạng thái \texttt{COMPLETED}.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người mua truy cập chi tiết đơn hàng đã hoàn thành và nhấn "Đánh giá".
+            \item Người mua chọn số sao (1-5) và nhập bình luận (tùy chọn), sau đó gửi.
+            \item Hệ thống lưu bản ghi \texttt{Review} và cập nhật điểm số trung bình của gian hàng/sách.
+            \item Người bán nhận thông báo, truy cập Dashboard và thấy đánh giá mới.
+            \item Người bán nhập phản hồi (\texttt{reply}) và gửi để hiển thị công khai cùng đánh giá.
+        \end{enumerate}
+\end{itemize}
+
+\section{Đặc tả Use Case: Giám sát Hội thoại (Admin Chat Monitoring)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Admin theo dõi hoặc trích xuất lịch sử chat của các bên nhằm phát hiện gian lận hoặc để làm bằng chứng khi có khiếu nại.
+    \item \textbf{Tác nhân:} Admin.
+    \item \textbf{Tiền điều kiện:} Có báo cáo gian lận hoặc có tranh chấp (Dispute) đang diễn ra.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Admin vào trang Quản lý Tranh chấp hoặc Danh sách Hội thoại có rủi ro cao.
+            \item Nhập mã đơn hàng hoặc tên tài khoản cần kiểm tra.
+            \item Hệ thống truy xuất lịch sử \texttt{Message} từ database và hiển thị đoạn hội thoại.
+            \item Admin dựa vào nội dung (như gửi số điện thoại, đề nghị chuyển khoản riêng) để đưa ra hình phạt cảnh cáo hoặc khóa tài khoản.
+        \end{enumerate}
+\end{itemize}
+
+\section{Đặc tả Use Case: Quản lý Sách Yêu thích (Favorites)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Người dùng lưu lại các sản phẩm quan tâm vào một danh sách riêng.
+    \item \textbf{Tác nhân:} Người mua.
+    \item \textbf{Tiền điều kiện:} Đã đăng nhập.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người mua duyệt sách trên Trang chủ hoặc trang Chi tiết sách.
+            \item Nhấn vào biểu tượng "Trái tim" (Favorite).
+            \item Hệ thống lưu tham chiếu sách vào bảng \texttt{Favorite} của người dùng (nếu chưa có) hoặc xóa khỏi bảng (nếu đã có - Toggle).
+            \item Người mua truy cập trang "Yêu thích" để xem danh sách sách đã lưu.
+        \end{enumerate}
+\end{itemize}
+
+\section{Đặc tả Use Case: Quản lý Đơn hàng (Order Management)}
+\begin{itemize}
+    \item \textbf{Mô tả:} Quy trình theo dõi và cập nhật trạng thái đơn hàng từ lúc đặt hàng đến khi hoàn tất.
+    \item \textbf{Tác nhân:} Người mua, Người bán, Hệ thống.
+    \item \textbf{Tiền điều kiện:} Đơn hàng đã được tạo thành công.
+    \item \textbf{Luồng sự kiện chính:}
+        \begin{enumerate}
+            \item Người bán truy cập Dashboard, xem danh sách đơn hàng mới (\texttt{PENDING}).
+            \item Người bán chuẩn bị sách và chuyển trạng thái sang \texttt{SHIPPING}, cập nhật mã vận đơn.
+            \item Hệ thống gửi thông báo cho Người mua về việc đơn hàng đang được giao.
+            \item Sau khi nhận sách, Người mua truy cập lịch sử đơn hàng và nhấn "Đã nhận hàng".
+            \item Hệ thống thực hiện giải ngân tiền từ \texttt{escrowBalance} sang \texttt{availableBalance} cho Người bán.
+        \end{enumerate}
+    \item \textbf{Hậu điều kiện:} Đơn hàng chuyển sang trạng thái \texttt{COMPLETED}, dòng tiền được đối soát hoàn tất.
+\end{itemize}
+
+\end{document}

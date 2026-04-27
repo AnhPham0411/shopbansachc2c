@@ -13,6 +13,18 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
       return { success: false, error: "Mã giảm giá không tồn tại" };
     }
 
+    const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      select: { rank: true }
+    });
+
+    if (user && voucher.minRank) {
+      const ranks = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
+      if (ranks.indexOf(user.rank) < ranks.indexOf(voucher.minRank)) {
+        return { success: false, error: `Cần hạng ${voucher.minRank} trở lên để sử dụng mã này` };
+      }
+    }
+
     if (!voucher.isActive) {
       return { success: false, error: "Mã giảm giá không còn hoạt động" };
     }
@@ -114,6 +126,7 @@ export async function createVoucher(data: any) {
         maxDiscount: data.maxDiscount || null,
         usageLimit: data.usageLimit || 100,
         expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
+        minRank: data.minRank || "BRONZE",
       }
     });
     return { success: true, voucher };

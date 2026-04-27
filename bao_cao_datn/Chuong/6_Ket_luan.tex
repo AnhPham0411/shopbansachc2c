@@ -1,0 +1,38 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Kết quả đạt được}
+Sau quá trình nghiên cứu và thực hiện, đồ án đã hoàn thành việc xây dựng nền tảng "Libris - C2C Bookstore", giải quyết được các mục tiêu trọng tâm đã đề ra ban đầu:
+
+\begin{itemize}
+    \item \textbf{Về mặt nghiệp vụ:} Triển khai thành công mô hình thương mại điện tử C2C chuyên biệt cho sách. Giải quyết được bài toán niềm tin thông qua cơ chế \textbf{Thanh toán trung gian (Escrow)}, giúp người mua yên tâm khi giao dịch và người bán có công cụ quản lý chuyên nghiệp. Cơ chế \textbf{Cart Splitting} đã giúp đơn giản hóa luồng checkout đa nguồn, tạo trải nghiệm mua sắm mượt mà. Bên cạnh đó, hệ thống xây dựng được cộng đồng bền vững thông qua các tính năng tương tác như \textbf{Chat thời gian thực, Đánh giá hai chiều (Reviews)}, cùng cơ chế \textbf{Khách hàng thân thiết (Loyalty)} giúp giữ chân người dùng.
+    \item \textbf{Về mặt kỹ thuật:} 
+    \begin{itemize}
+        \item Xây dựng được hệ thống tài chính nội bộ vững chắc dựa trên nguyên tắc \textbf{Ledger (Sổ cái)}, đảm bảo mọi biến động dòng tiền đều có thể truy vết.
+        \item Áp dụng thành công các công nghệ hiện đại như Next.js 14, TypeScript và Prisma để tạo ra một hệ thống có hiệu năng cao, dễ bảo trì và mở rộng.
+        \item Xử lý thành công các bài toán khó về đồng bộ dữ liệu (\texttt{Race Condition}) và tính lũy đẳng trong thanh toán trực tuyến.
+    \end{itemize}
+    \item \textbf{Về mặt xã hội:} Góp phần thúc đẩy văn hóa đọc và kinh tế tuần hoàn bằng cách tạo ra một kênh trao đổi sách cũ an toàn, tiết kiệm và thân thiện với môi trường.
+\end{itemize}
+
+\section{Hạn chế của dự án}
+Dù đã đạt được những kết quả khả quan, dự án vẫn tồn tại một số hạn chế nhất định cần được khắc phục trong các phiên bản tiếp theo:
+\begin{itemize}
+    \item \textbf{Kết nối Logistics:} Hiện tại hệ thống vẫn đang sử dụng cơ chế nhập mã vận đơn thủ công. Việc chưa kết nối API trực tiếp với các đơn vị vận chuyển (GHTK, GHN) khiến luồng \texttt{Auto-Complete} vẫn phụ thuộc vào sự trung thực của người bán trong việc cập nhật trạng thái.
+    \item \textbf{Xử lý dữ liệu lớn:} Hệ thống chưa được kiểm thử trong điều kiện tải cao (High Concurrency) với hàng chục ngàn người dùng đồng thời, điều này có thể phát sinh các vấn đề về hiệu năng database cần được tối ưu thêm.
+    \item \textbf{Trải nghiệm người dùng:} Các tính năng hỗ trợ như bộ lọc nâng cao, tìm kiếm theo khoảng cách địa lý và hệ thống thông báo đẩy (Push Notification) vẫn chưa được triển khai hoàn thiện.
+\end{itemize}
+
+\section{Hướng phát triển tương lai}
+Trong tương lai, Libris hướng tới việc trở thành một siêu ứng dụng (Super App) cho cộng đồng yêu sách với các nâng cấp chiến lược:
+\begin{itemize}
+    \item \textbf{Tự động hóa Logistics:} Tích hợp sâu với các đơn vị vận chuyển để hỗ trợ lấy hàng tại nhà cho người bán và theo dõi hành trình đơn hàng thời gian thực (Real-time Tracking).
+    \item \textbf{Ứng dụng AI và Computer Vision:} 
+    \begin{itemize}
+        \item Tự động nhận diện tình trạng sách qua camera (phát hiện vết rách, ố vàng) để gợi ý mức giá phù hợp.
+        \item Sử dụng máy học (Machine Learning) để xây dựng hệ thống gợi ý cá nhân hóa (Recommendation System) dựa trên gu đọc sách của từng người dùng.
+    \end{itemize}
+    \item \textbf{Mở rộng hệ sinh thái:} Phát triển ứng dụng trên nền tảng di động (iOS/Android) và tích hợp các tính năng cộng đồng như "Câu lạc bộ mượn sách" hoặc "Đấu giá sách hiếm".
+\end{itemize}
+
+\end{document}

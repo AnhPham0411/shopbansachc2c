@@ -33,7 +33,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role, // Custom role field
+          role: user.role,
+          points: user.points,
+          rank: user.rank,
         };
       },
     }),

@@ -5,6 +5,7 @@ import { Shield, Truck, Info, BookOpen, Star, ArrowLeft, User } from "lucide-rea
 import { PurchaseActions } from "./PurchaseActions";
 import { BookTabs } from "./BookTabs";
 import Link from "next/link";
+import { isBookFavorite } from "@/lib/favorite-actions";
 
 export default async function BookDetailPage({
   params,
@@ -19,6 +20,14 @@ export default async function BookDetailPage({
         select: { name: true, email: true }
       },
       reviews: {
+        include: {
+          replies: {
+            include: {
+              user: { select: { name: true, role: true } }
+            },
+            orderBy: { createdAt: "asc" }
+          }
+        },
         orderBy: { createdAt: "desc" }
       }
     }
@@ -27,6 +36,8 @@ export default async function BookDetailPage({
   if (!book) {
     notFound();
   }
+
+  const isFavorite = await isBookFavorite(id);
 
   const avgRating = book.reviews.length > 0
     ? book.reviews.reduce((acc, r) => acc + r.rating, 0) / book.reviews.length
@@ -108,10 +119,13 @@ export default async function BookDetailPage({
                 )}
               </div>
 
-              <PurchaseActions book={{
-                ...book,
-                price: Number(book.price)
-              } as any} />
+              <PurchaseActions 
+                book={{
+                  ...book,
+                  price: Number(book.price)
+                } as any} 
+                initialIsFavorite={isFavorite}
+              />
               
               <div className="grid grid-cols-2 gap-6 pt-6 border-t border-zinc-50">
                 <div className="flex items-center gap-4">
@@ -129,7 +143,7 @@ export default async function BookDetailPage({
               </div>
             </div>
 
-            <BookTabs description={book.description} reviews={book.reviews} />
+            <BookTabs description={book.description} reviews={book.reviews} sellerId={book.sellerId} />
           </div>
         </div>
       </div>

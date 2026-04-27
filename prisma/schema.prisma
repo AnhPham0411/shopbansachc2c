@@ -24,6 +24,10 @@ model User {
   wallets             Wallet?
   buyerConversations  Conversation[] @relation("BuyerConversations")
   sellerConversations Conversation[] @relation("SellerConversations")
+  points              Int            @default(0)
+  rank                Rank           @default(BRONZE)
+  favorites           Favorite[]
+  reviewReplies       ReviewReply[]
 
   @@map("user")
 }
@@ -45,6 +49,7 @@ model Book {
   orderItems    OrderItem[]
   reviews       Review[]
   conversations Conversation[]
+  favorites     Favorite[]
 
   @@index([sellerId], map: "Book_sellerId_fkey")
   @@map("book")
@@ -137,9 +142,34 @@ model Review {
   createdAt  DateTime @default(now())
   book       Book     @relation(fields: [bookId], references: [id], map: "Review_bookId_fkey")
   subOrder   SubOrder @relation(fields: [subOrderId], references: [id], map: "Review_subOrderId_fkey")
+  replies    ReviewReply[]
 
   @@index([bookId], map: "Review_bookId_fkey")
   @@map("review")
+}
+
+model ReviewReply {
+  id        String   @id @default(uuid())
+  reviewId  String
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("reviewreply")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@map("favorite")
 }
 
 model Dispute {
@@ -213,6 +243,7 @@ model Voucher {
   isActive       Boolean       @default(true)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  minRank        Rank          @default(BRONZE)
   masterOrders   MasterOrder[]
 
   @@map("voucher")
@@ -302,4 +333,13 @@ enum DiscountType {
   FIXED_AMOUNT
 
   @@map("discount_type")
+}
+
+enum Rank {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+
+  @@map("user_rank")
 }

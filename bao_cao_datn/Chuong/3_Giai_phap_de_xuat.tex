@@ -1,0 +1,125 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Mô hình luồng dữ liệu hệ thống}
+Để nắm bắt toàn diện sự tương tác giữa các thực thể và các tiến trình nghiệp vụ cốt lõi, việc xây dựng mô hình ngữ cảnh và luồng dữ liệu là vô cùng cần thiết.
+
+\subsection{Sơ đồ ngữ cảnh (Context Diagram)}
+Sơ đồ ngữ cảnh (Hình \ref{fig:context_diagram}) thể hiện góc nhìn tổng quan nhất về hệ thống Libris ở cấp độ 0. Hệ thống đóng vai trò trung tâm, giao tiếp với các tác nhân bên ngoài bao gồm Người mua, Người bán, Quản trị viên, Cổng thanh toán VNPay và Đơn vị vận chuyển. Mọi luồng dữ liệu vào/ra đều phải đi qua hệ thống trung tâm này để được kiểm soát và ghi nhận.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/context_diagram.png}
+    \caption{Sơ đồ Ngữ cảnh (Context Diagram) hệ thống Libris}
+    \label{fig:context_diagram}
+\end{figure}
+
+\subsection{Sơ đồ luồng dữ liệu cấp 1 (DFD Level 1)}
+Từ sơ đồ ngữ cảnh, hệ thống được phân rã thành 4 tiến trình nghiệp vụ chính trong sơ đồ luồng dữ liệu cấp 1 (Hình \ref{fig:dfd_level_1}):
+\begin{enumerate}
+    \item \textbf{Quản lý người dùng:} Xử lý đăng ký, đăng nhập và phân quyền.
+    \item \textbf{Quản lý gian hàng \& Sách:} Nơi người bán cập nhật kho hàng và người mua thực hiện tìm kiếm.
+    \item \textbf{Xử lý đơn hàng \& Thanh toán:} Tiếp nhận giỏ hàng, tách đơn và tương tác với VNPay.
+    \item \textbf{Quản lý ví \& Tranh chấp:} Quản lý dòng tiền Escrow và xử lý các khiếu nại phát sinh.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/dfd_level_1.png}
+    \caption{Sơ đồ Luồng dữ liệu cấp 1 (DFD Level 1)}
+    \label{fig:dfd_level_1}
+\end{figure}
+
+\subsection{Sơ đồ luồng dữ liệu cấp 2 (DFD Level 2) - Xử lý đơn hàng}
+Tiến trình "3.0 Xử lý đơn hàng \& Thanh toán" là trái tim của hệ thống C2C. Hình \ref{fig:dfd_level_2} thể hiện sự phân rã chi tiết luồng dữ liệu đi từ việc thêm sách vào giỏ, tách đơn (Cart Splitting), cho đến việc cập nhật số dư vào ví Escrow sau khi nhận phản hồi từ VNPay.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/dfd_level_2_order.png}
+    \caption{Sơ đồ Luồng dữ liệu cấp 2 - Xử lý Đơn hàng}
+    \label{fig:dfd_level_2}
+\end{figure}
+
+\section{Phân tích chân dung người dùng (User Roles)}
+Hệ thống được thiết kế xoay quanh ba thực thể chính, mỗi thực thể có các luồng nghiệp vụ và công cụ quản trị riêng biệt để đảm bảo tính minh bạch và an toàn trong giao dịch:
+
+\begin{itemize}
+    \item \textbf{Người mua (Buyer):}
+    \begin{itemize}
+        \item Khám phá và tìm kiếm sách theo thể loại, tình trạng (\texttt{condition}) và vị trí người bán.
+        \item Tương tác trực tiếp với người bán qua hệ thống Chat để thương lượng hoặc kiểm tra hình ảnh thật của sách.
+        \item Thực hiện thanh toán đa shop và quản lý hành trình đơn hàng.
+        \item Thực thi quyền khiếu nại hoặc đánh giá sau khi giao dịch hoàn tất.
+    \end{itemize}
+    \item \textbf{Người bán (Seller):}
+    \begin{itemize}
+        \item Đăng ký và quản lý gian hàng cá nhân.
+        \item Công cụ đăng bán sách tối ưu với khả năng phân loại tình trạng sách cũ.
+        \item Quản lý ví doanh thu: Theo dõi dòng tiền đang bị giam (Escrow) và tiền khả dụng có thể rút.
+        \item Thực hiện xử lý đơn hàng: Cập nhật mã vận đơn và tương tác với các đơn vị vận chuyển.
+    \end{itemize}
+    \item \textbf{Quản trị viên (Admin):}
+    \begin{itemize}
+        \item Giám sát toàn bộ hoạt động của sàn, quản lý danh mục sách và người dùng.
+        \text{Hệ thống đối soát tài chính:} Theo dõi tổng phí sàn thu được và phê duyệt các lệnh rút tiền (\texttt{Cash-out}).
+        \item Vai trò Trọng tài: Tiếp nhận bằng chứng và đưa ra phán quyết trong các vụ tranh chấp giữa Buyer và Seller.
+    \end{itemize}
+\end{itemize}
+
+\section{Giải pháp giải quyết các lỗ hổng nghiệp vụ C2C}
+Để xây dựng một nền tảng C2C bền vững, dự án tập trung vào việc giải quyết 5 bài toán "điểm mù" thường gặp trong thương mại điện tử cá nhân:
+
+\subsection{Luồng giải ngân dựa trên mã vận đơn (Logistics Trigger)}
+Trong mô hình Escrow, nếu người mua cố tình không xác nhận đã nhận hàng, vốn của người bán sẽ bị giam vĩnh viễn. Giải pháp đề xuất:
+\begin{itemize}
+    \item \textbf{Xác thực hành trình:} Người bán bắt buộc phải nhập mã vận đơn (\texttt{Tracking Code}) từ các đơn vị vận chuyển (GHTK, GHN, Viettel Post). Hệ thống sẽ liên kết trạng thái đơn hàng với hành trình thực tế.
+    \item \textbf{Cơ chế Hạ cánh mềm (Auto-Complete):} Nếu sau 7 ngày kể từ khi đơn vị vận chuyển báo "Giao hàng thành công" mà người mua không có khiếu nại, hệ thống sẽ tự động chốt đơn và giải ngân tiền cho người bán.
+\end{itemize}
+
+\subsection{Cơ chế tranh chấp và hoàn tiền (Dispute \& Refund)}
+Mua bán sách cũ tiềm ẩn rủi ro về chất lượng không đúng như mô tả (sách photo, thiếu trang). 
+\begin{itemize}
+    \item \textbf{Quyền được khiếu nại:} Người mua có 72 giờ vàng sau khi nhận hàng để kiểm tra và nhấn nút "Yêu cầu hoàn tiền". 
+    \item \textbf{Arbitration Dashboard:} Khi có tranh chấp, hệ thống yêu cầu hai bên cung cấp bằng chứng (ảnh mở hộp, video). Admin sẽ sử dụng Dashboard chuyên dụng để xem xét và đưa ra quyết định cuối cùng, đảm bảo tính công bằng.
+\end{itemize}
+
+\subsection{Quản lý lệnh rút tiền và Chống gian lận (Cash-out Approval)}
+Để tránh rủi ro hệ thống bị tấn công rút tiền tự động hoặc rửa tiền:
+\begin{itemize}
+    \item \textbf{Cơ chế duyệt 2 lớp:} Khi người bán rút tiền, số dư khả dụng sẽ bị trừ và chuyển sang trạng thái "Chờ duyệt" (\texttt{Pending}). 
+    \item \textbf{Manual Settlement:} Admin thực hiện chuyển khoản thủ công bên ngoài hệ thống ngân hàng, sau đó mới cập nhật trạng thái "Thành công" trên web. Điều này đảm bảo mọi dòng tiền ra khỏi hệ thống đều được kiểm soát bởi con người.
+\end{itemize}
+
+\subsection{Hệ thống đánh giá tín nhiệm (Rating \& Review)}
+Uy tín là đơn vị tiền tệ thứ hai trong C2C. Hệ thống chỉ cho phép đánh giá khi đơn hàng đã \texttt{COMPLETED}. Điều này loại bỏ tình trạng đánh giá ảo (spam review) và đảm bảo các nhận xét đều đến từ những người đã thực hiện giao dịch thực tế.
+
+\subsection{Kiểm soát tranh chấp tồn kho (Race Condition)}
+Với sách cũ thường chỉ có 1 bản duy nhất, việc hai khách hàng cùng thanh toán một lúc là rủi ro lớn.
+\begin{itemize}
+    \item \textbf{Soft-lock (Khóa mềm):} Khi khách hàng nhấn "Thanh toán" và được chuyển hướng sang cổng VNPay, hệ thống sẽ khóa tồn kho của cuốn sách đó trong 15 phút.
+    \item \textbf{Tự động nhả kho:} Nếu giao dịch không thành công hoặc khách hàng không hoàn tất thanh toán trong thời gian quy định, sách sẽ tự động được hiển thị lại trên sàn để người khác có thể mua.
+\end{itemize}
+
+\section{Yêu cầu phi chức năng (Non-functional Requirements)}
+Bên cạnh các nghiệp vụ cốt lõi, hệ thống Libris còn phải đáp ứng các tiêu chuẩn kỹ thuật khắt khe để đảm bảo trải nghiệm người dùng và tính an toàn dữ liệu:
+
+\begin{itemize}
+    \item \textbf{Tính bảo mật (Security):}
+    \begin{itemize}
+        \item Mọi kết nối giữa Client và Server đều phải được mã hóa qua giao thức HTTPS.
+        \item Mật khẩu người dùng được băm (hashing) bằng thuật toán \texttt{bcrypt} trước khi lưu trữ.
+        \item Sử dụng Middleware để kiểm tra quyền truy cập cho từng vai trò (\texttt{Role-based Access Control}).
+    \end{itemize}
+    \item \textbf{Hiệu năng (Performance):}
+    \begin{itemize}
+        \item Tốc độ phản hồi của các trang danh mục sách phải dưới 2 giây.
+        \item Sử dụng cơ chế \texttt{Server-Side Rendering} và \texttt{Caching} để giảm tải cho database khi có lượng truy cập lớn.
+    \end{itemize}
+    \item \textbf{Tính tin cậy và Toàn vẹn (Reliability \& Integrity):}
+    \begin{itemize}
+        \item Đảm bảo tính nhất quán của dữ liệu tài chính thông qua các ACID Transaction của MySQL.
+        \item Hệ thống có khả năng tự phục hồi (Rollback) khi xảy ra lỗi trong quá trình tách đơn hàng hoặc giải ngân ví.
+    \end{itemize}
+\end{itemize}
+
+\end{document}

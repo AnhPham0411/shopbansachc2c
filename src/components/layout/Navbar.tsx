@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List, MessageSquare } from "lucide-react";
+import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List, MessageSquare, Heart, Trophy, Coins } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { LogoutButton } from "./LogoutButton";
@@ -138,10 +138,24 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                 <Link href={getDashboardLink()} className="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-600 font-bold hover:bg-zinc-200 transition-all">
-                    {session.user?.name?.charAt(0)}
-                 </Link>
-                 <LogoutButton />
+                <div className="hidden lg:flex flex-col items-end mr-2">
+                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-0.5 rounded-full border border-zinc-100">
+                      <Trophy className="w-3.5 h-3.5 text-yellow-600" />
+                      <span className="text-[10px] font-black uppercase text-zinc-600 tracking-wider">
+                        {(session.user as any).rank || "BRONZE"}
+                      </span>
+                   </div>
+                   <div className="flex items-center gap-1 mt-0.5">
+                      <Coins className="w-3 h-3 text-primary" />
+                      <span className="text-[11px] font-bold text-primary">
+                        {((session.user as any).points || 0).toLocaleString()} <span className="text-[9px] uppercase">vàng</span>
+                      </span>
+                   </div>
+                </div>
+                <Link href={getDashboardLink()} className="w-9 h-9 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200 text-zinc-600 font-bold hover:bg-zinc-200 transition-all">
+                   {session.user?.name?.charAt(0)}
+                </Link>
+                <LogoutButton />
               </div>
             )}
 
@@ -162,6 +176,12 @@ export function Navbar() {
                     {unreadChatCount}
                   </span>
                 )}
+              </Link>
+            )}
+
+            {session && (
+              <Link href="/buyer/favorites" className="p-2 text-zinc-600 hover:bg-zinc-50 rounded-full transition-all group relative">
+                <Heart className="w-6 h-6 group-hover:fill-primary group-hover:text-primary transition-all" />
               </Link>
             )}
 

@@ -106,14 +106,14 @@ export async function POST(req: Request) {
         );
 
         const isAdminSeller = admin && sellerId === admin.id;
-        
+
         // Calculate pro-rated discount for this seller
-        const sellerDiscount = subTotalAmount > 0 
-          ? (discountAmount * (sellerSubTotal / subTotalAmount)) 
+        const sellerDiscount = subTotalAmount > 0
+          ? (discountAmount * (sellerSubTotal / subTotalAmount))
           : 0;
-        
+
         const discountedSellerSubTotal = sellerSubTotal - sellerDiscount;
-        
+
         // Marketplace Logic: 
         // - Admin/Sàn self-selling: 0% Fee, 100% Net
         // - Others selling: 10% Fee, 90% Net
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
                 referenceSubOrderId: subOrder.id,
                 type: isAdminSeller ? "DIRECT_SALE" : "DEDUCT_FEE",
                 amount: new Decimal(adminRevenueAmount),
-                description: isAdminSeller 
+                description: isAdminSeller
                   ? `Doanh thu bán hàng trực tiếp (Trang chủ Libris) từ đơn hàng #${subOrder.id.slice(0, 8)}`
                   : `Hoa hồng hệ thống (10%) từ đơn hàng #${subOrder.id.slice(0, 8)}`,
               },

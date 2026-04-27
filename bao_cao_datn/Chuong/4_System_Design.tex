@@ -1,0 +1,52 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Kiến trúc dữ liệu (Database Schema)}
+Hệ thống sử dụng MySQL làm cơ sở dữ liệu quan hệ, được quản lý thông qua Prisma ORM. Cấu trúc bảng được thiết kế để hỗ trợ tối đa luồng giao dịch phức tạp của mô hình C2C.
+
+\subsection{Các thực thể chính}
+\begin{itemize}
+    \item \textbf{User:} Quản lý thông tin người dùng, bao gồm cả tài khoản ngân hàng để rút tiền. Phân quyền qua trường \texttt{role} (ADMIN/USER).
+    \item \textbf{Book:} Lưu trữ thông tin sách, đặc biệt là trường \texttt{condition} (NEW\_100, LIKE\_NEW, GOOD, OLD) để mô tả chi tiết tình trạng sách cũ.
+    \item \textbf{Order System:} 
+        \begin{itemize}
+            \item \texttt{MasterOrder}: Lưu tổng tiền (\texttt{totalPayment}), trạng thái thanh toán và mã giao dịch VNPay.
+            \item \texttt{SubOrder}: Lưu thông tin chi tiết của từng shop, mã vận đơn (\texttt{trackingCode}) và trạng thái đơn hàng (\texttt{status}).
+        \end{itemize}
+    \item \textbf{Wallet \& Transaction:} 
+        \begin{itemize}
+            \item \texttt{Wallet}: Lưu số dư kép (\texttt{availableBalance} và \texttt{escrowBalance}).
+            \item \texttt{WalletTransaction}: Sổ cái lưu vết mọi biến động tiền tệ (IN\_ESCROW, ESCROW\_RELEASE, DEDUCT\_FEE...).
+        \end{itemize}
+\end{itemize}
+
+\section{Sơ đồ luồng xử lý (Sequence Diagram)}
+
+\subsection{Luồng đặt hàng và Thanh toán}
+Quá trình thanh toán được thực hiện trong một \textbf{Database Transaction} duy nhất để đảm bảo tính toàn vẹn:
+\begin{enumerate}
+    \item Hệ thống kiểm tra tồn kho (\texttt{stockQuantity}) của từng cuốn sách.
+    \item Tạo \texttt{MasterOrder} và các \texttt{SubOrder} tương ứng.
+    \item Cập nhật số lần sử dụng của mã giảm giá (\texttt{Voucher}).
+    \item Tính toán và cộng phí sàn (10\%) vào ví Admin.
+    \item Chuyển 90\% số tiền vào ví giam (\texttt{escrowBalance}) của Người bán.
+    \item Giảm số lượng tồn kho trong bảng \texttt{book}.
+\end{enumerate}
+
+\subsection{Luồng đối soát và Giải ngân}
+Khi đơn hàng chuyển sang trạng thái \texttt{DELIVERED}:
+\begin{enumerate}
+    \item Người mua bấm "Đã nhận hàng" hoặc hết thời hạn khiếu nại.
+    \item Hệ thống thực hiện lệnh \texttt{ESCROW\_RELEASE}: Trừ tiền ở \texttt{escrowBalance} và cộng vào \texttt{availableBalance} của người bán.
+    \item Ghi nhận giao dịch vào bảng \texttt{WalletTransaction} để phục vụ sao kê.
+\end{enumerate}
+
+\section{Thiết kế giao diện (UI/UX)}
+Giao diện được thiết kế theo phong cách tối giản, hiện đại sử dụng Tailwind CSS:
+\begin{itemize}
+    \item \textbf{Trang chủ:} Hiển thị sách theo danh mục và tình trạng.
+    \item \textbf{Trang quản lý shop (Seller Dashboard):} Theo dõi dòng tiền đang bị giam và các đơn hàng cần xử lý.
+    \item \textbf{Trang Admin:} Đối soát toàn bộ các lệnh rút tiền và giải quyết tranh chấp.
+\end{itemize}
+
+\end{document}

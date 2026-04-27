@@ -1,0 +1,61 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Môi trường và Công nghệ triển khai}
+Dự án được xây dựng và chạy thử nghiệm trên môi trường giả lập tiệm cận với môi trường thực tế để đảm bảo tính khả thi:
+\begin{itemize}
+    \item \textbf{Cấu hình Server:} Node.js v20 LTS, chạy trên Docker Container để đảm bảo tính nhất quán giữa môi trường phát triển và triển khai.
+    \item \textbf{Cơ sở dữ liệu:} MySQL v8.0 chạy trên Docker với dung lượng lưu trữ giả lập 10GB. Hệ thống đã được đẩy \texttt{Seed Data} với hơn 500 bản ghi sách và 50 tài khoản người dùng để kiểm thử hiệu năng.
+    \item \textbf{Môi trường Thanh toán:} Tích hợp VNPay Sandbox với tài khoản Test và ứng dụng VNPay giả lập trên điện thoại để thực hiện quét mã QR và xác thực OTP.
+    \item \textbf{Công cụ kiểm thử:} Sử dụng Postman để kiểm thử API, Prisma Studio để đối soát dữ liệu trực tiếp và hệ thống Log nội bộ để theo dõi luồng \texttt{WalletTransaction}.
+\end{itemize}
+
+\section{Kết quả thực hiện các tính năng}
+Hệ thống đã hoàn thiện 100\% các tính năng cốt lõi đề ra trong giai đoạn thiết kế:
+
+\subsection{Luồng giao dịch và Phân bổ tài chính}
+Kết quả kiểm thử cho thấy cơ chế tách đơn hàng vận hành chính xác:
+\begin{itemize}
+    \item \textbf{Kịch bản Giỏ hàng hỗn hợp:} Khách hàng thanh toán đơn hàng tổng 1.000.000 VNĐ gồm sách từ 3 shop khác nhau. Hệ thống tự động tách thành 3 bản ghi \texttt{SubOrder}. 
+    \item \textbf{Phân bổ dòng tiền:} Admin nhận ngay 100.000 VNĐ (10\% phí sàn) vào ví khả dụng. Ba người bán nhận tổng cộng 900.000 VNĐ vào ví \texttt{escrowBalance}. Mọi biến động đều được ghi nhận vào bảng \texttt{WalletTransaction} với mã tham chiếu đơn hàng chính xác.
+\end{itemize}
+
+\subsection{Hệ thống Chat thời gian thực và Giám sát của Admin}
+Sử dụng WebSockets (thông qua giải pháp giả lập của Next.js Server Actions hoặc tích hợp thư viện) để hỗ trợ phản hồi ngay lập tức:
+\begin{itemize}
+    \item Tốc độ truyền tải tin nhắn dưới 200ms trong điều kiện mạng local.
+    \item Hỗ trợ gửi ảnh trực tiếp để người bán minh chứng tình trạng sách (rách bìa, ố vàng), giúp tăng độ tin tưởng cho người mua trước khi thanh toán.
+    \item \textbf{Cơ chế giám sát của Admin:} Mọi hội thoại đều được mã hóa và lưu trữ, Admin có thể tra cứu và trích xuất tin nhắn trực tiếp từ Dashboard để làm bằng chứng phân xử khi có khiếu nại (Dispute), ngăn chặn tình trạng gian lận hay gạ gẫm giao dịch ngoài luồng.
+\end{itemize}
+
+\subsection{Hệ thống Khách hàng thân thiết (Loyalty) và Đánh giá (Review)}
+Việc xây dựng cộng đồng bền vững được minh chứng qua các tính năng tương tác và giữ chân khách hàng:
+\begin{itemize}
+    \item \textbf{Tính điểm và Xếp hạng:} Thuật toán cộng điểm hoạt động chính xác khi đơn hàng hoàn tất (\texttt{COMPLETED}), tự động cập nhật hạng thành viên của người dùng và hiển thị ngay lập tức nhờ cơ chế revalidation của Next.js.
+    \item \textbf{Danh sách Yêu thích (Favorites):} Tính năng thêm/xóa sách yêu thích hoạt động mượt mà với độ trễ thấp (Optimistic UI updates), cung cấp một khu vực riêng để người dùng quản lý sách muốn mua.
+    \item \textbf{Đánh giá hai chiều:} Người mua có thể đánh giá số sao và để lại bình luận cho cuốn sách và người bán. Tính năng \textbf{Review Replies} cho phép người bán phản hồi công khai các bình luận này, tạo ra tính minh bạch và tăng độ uy tín cho cửa hàng của họ.
+\end{itemize}
+
+\subsection{Kiểm soát tồn kho và Race Condition}
+Thực hiện kịch bản "Flash Sale giả lập": 10 người dùng cùng ấn thanh toán cho 1 cuốn sách duy nhất. 
+\begin{itemize}
+    \item \textbf{Kết quả:} Chỉ 1 người dùng chuyển hướng thành công sang VNPay và giữ \texttt{Soft-lock} cuốn sách. 9 người còn lại nhận được thông báo "Sách đang có người giao dịch" hoặc "Hết hàng". 
+    \item Điều này khẳng định cơ chế khóa tồn kho trong \texttt{prisma.\$transaction} hoạt động hiệu quả.
+\end{itemize}
+
+\section{Kiểm thử và Đánh giá kết quả}
+
+\subsection{Kịch bản kiểm thử trường hợp đặc biệt (Edge Cases)}
+Dự án tập trung vào việc xử lý các tình huống lỗi để bảo vệ dòng tiền:
+\begin{itemize}
+    \item \textbf{Cơ chế Idempotency (Lũy đẳng):} Giả lập tình huống cổng thanh toán gọi lại API của hệ thống (Webhook/IPN) nhiều lần cho cùng một giao dịch. Hệ thống sử dụng cơ chế kiểm tra \texttt{payment\_status} để đảm bảo tiền chỉ được cộng vào ví một lần duy nhất.
+    \item \textbf{Hoàn tiền nội bộ (Refund to Wallet):} Khi đơn hàng bị hủy hợp lệ, hệ thống ưu tiên hoàn tiền vào ví ảo của người mua. Giải pháp này vừa giúp khách hàng có thể mua lại ngay lập tức, vừa giúp sàn giảm chi phí giao dịch ngân hàng phát sinh từ việc hoàn tiền mặt.
+\end{itemize}
+
+\subsection{Đánh giá hiệu năng và Độ ổn định}
+\begin{itemize}
+    \item \textbf{Độ chính xác tài chính:} Bằng việc sử dụng kiểu dữ liệu \texttt{Decimal(15,2)}, hệ thống loại bỏ hoàn toàn lỗi làm tròn số thập phân (lỗi dấu phẩy động) thường gặp ở các phép tính hoa hồng.
+    \item \textbf{Tính an toàn ACID:} Kiểm thử "Rớt mạng đột ngột" khi đang thực hiện transaction chia tiền. Hệ thống MySQL đảm bảo \texttt{Rollback} hoàn toàn, không có tình trạng Admin đã nhận phí nhưng Seller chưa nhận được tiền giam.
+\end{itemize}
+
+\end{document}

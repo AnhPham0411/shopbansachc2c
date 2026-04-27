@@ -1,0 +1,40 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Hướng dẫn cài đặt môi trường phát triển}
+Để triển khai và chạy thử nghiệm hệ thống Libris trên môi trường cục bộ (Localhost), lập trình viên cần tuân thủ các bước thiết lập sau:
+
+\subsection{Yêu cầu hệ thống (System Requirements)}
+\begin{itemize}
+    \item \textbf{Runtime:} Node.js phiên bản v20.x (LTS) trở lên.
+    \item \textbf{Package Manager:} npm hoặc yarn (khuyến nghị dùng npm kèm theo Node.js).
+    \item \textbf{Database:} MySQL Server v8.0+. Có thể sử dụng Docker để khởi chạy nhanh bằng lệnh: \\ \texttt{docker run --name mysql-libris -e MYSQL\_ROOT\_PASSWORD=password -p 3306:3306 -d mysql:8.0}
+\end{itemize}
+
+\subsection{Cấu hình biến môi trường (.env)}
+Tại thư mục gốc của dự án, tạo file \texttt{.env} để quản lý các tham số cấu hình nhạy cảm. Đây là bước quan trọng để kết nối ứng dụng với các dịch vụ bên thứ ba:
+\begin{lstlisting}
+# Ket noi Database
+DATABASE_URL="mysql://root:password@localhost:3306/libris_db"
+
+# Xac thuc NextAuth (Auth.js)
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="chuoi_bi_mat_ngau_nhien_de_ma_hoa_session"
+\end{lstlisting}
+
+\section{Khởi tạo Cơ sở dữ liệu và Prisma ORM}
+Dự án sử dụng Prisma để quản lý schema và truy vấn dữ liệu. Cần thực hiện các lệnh sau để chuẩn bị database:
+\begin{enumerate}
+    \item \textbf{Cài đặt thư viện:} Chạy lệnh \texttt{npm install} để tải về toàn bộ các dependency trong \texttt{package.json}.
+    \item \textbf{Đẩy Schema lên Database:} Chạy \texttt{npx prisma db push}. Lệnh này sẽ tự động tạo các bảng (\texttt{User}, \texttt{Book}, \texttt{Order}, \texttt{Wallet}...) dựa trên file định nghĩa \texttt{schema.prisma}.
+    \item \textbf{Sinh Prisma Client:} Chạy \texttt{npx prisma generate} để sinh ra bộ gõ (Typing) cho TypeScript, giúp việc code an toàn và nhanh chóng hơn.
+\end{enumerate}
+
+\section{Hướng dẫn vận hành và Chạy thử (Demo)}
+\begin{itemize}
+    \item \textbf{Chạy ứng dụng:} Sử dụng lệnh \texttt{npm run dev}. Truy cập \texttt{http://localhost:3000} để bắt đầu trải nghiệm.
+    \item \textbf{Quản trị dữ liệu trực quan:} Chạy lệnh \texttt{npx prisma studio}. Một giao diện web sẽ mở ra tại \texttt{http://localhost:5555}, cho phép Admin trực tiếp can thiệp vào các bảng dữ liệu để giả lập các trạng thái giao dịch (ví dụ: chuyển trạng thái đơn hàng sang \texttt{SHIPPING} để test luồng giải ngân).
+    \item \textbf{Thanh toán đơn hàng:} Trong quá trình demo, người dùng có thể lựa chọn các phương thức thanh toán như COD hoặc Chuyển khoản để trải nghiệm luồng xử lý đơn hàng và chia tiền hoa hồng.
+\end{itemize}
+
+\end{document}

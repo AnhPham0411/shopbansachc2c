@@ -10,14 +10,19 @@ export async function GET() {
     }
 
     const userId = session.user.id;
+    const role = (session.user as any).role;
+
+    const whereClause = role === "ADMIN" 
+      ? {} 
+      : {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId },
+          ],
+        };
 
     const conversations = await prisma.conversation.findMany({
-      where: {
-        OR: [
-          { buyerId: userId },
-          { sellerId: userId },
-        ],
-      },
+      where: whereClause,
       include: {
         buyer: { select: { id: true, name: true } },
         seller: { select: { id: true, name: true } },

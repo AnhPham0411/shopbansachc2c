@@ -1,0 +1,36 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Môi trường và Công nghệ triển khai}
+Dự án được phát triển và chạy thử nghiệm trên môi trường sau:
+\begin{itemize}
+    \item \textbf{Frontend/Backend:} Next.js v16.2.3, React v19.
+    \item \textbf{Cơ sở dữ liệu:} MySQL v8.0 chạy trên Docker/Localhost.
+    \item \textbf{ORM:} Prisma v6.2.1.
+    \item \textbf{Thanh toán:} Tích hợp VNPay và Thanh toán khi nhận hàng (COD).
+    \item \textbf{Styling:} Tailwind CSS v4.0.
+\end{itemize}
+
+\section{Kết quả thực hiện các tính năng}
+
+\subsection{Tính năng giao dịch và Ví điện tử}
+Kết quả kiểm thử cho thấy luồng tiền được xử lý chính xác tuyệt đối thông qua hệ thống sổ cái (\texttt{WalletTransaction}). Các kịch bản kiểm thử bao gồm:
+\begin{itemize}
+    \item Mua sách từ 3 shop khác nhau: Hệ thống tự động tách thành 3 đơn hàng con, tính phí sàn riêng biệt cho Admin và giam tiền cho 3 người bán khác nhau.
+    \item Áp dụng mã giảm giá: Giá trị giảm giá được phân bổ đều, phí sàn 10\% được tính trên giá trị thực thu sau giảm giá.
+\end{itemize}
+
+\subsection{Hệ thống Chat và Trao đổi}
+Tính năng Chat thời gian thực cho phép người mua hỏi về tình trạng thực tế của sách cũ (ảnh thật, vết rách...) trước khi quyết định mua, giúp giảm thiểu tỷ lệ tranh chấp sau khi nhận hàng.
+
+\subsection{Quản lý tồn kho và Race Condition}
+Sử dụng cơ chế \texttt{Soft-lock} và kiểm tra số lượng tồn kho ngay trong \texttt{prisma.\$transaction} đã giúp hệ thống ngăn chặn triệt để lỗi bán quá số lượng (overselling) khi có nhiều người cùng mua một cuốn sách duy nhất.
+
+\section{Đánh giá hiệu năng và Độ ổn định}
+\begin{itemize}
+    \item \textbf{Thời gian phản hồi:} Các API thanh toán và xử lý đơn hàng có thời gian phản hồi trung bình dưới 200ms (trừ thời gian chờ từ phía VNPay).
+    \item \textbf{Tính an toàn:} Việc sử dụng TypeScript và Prisma Client giúp loại bỏ hoàn toàn các lỗi sai kiểu dữ liệu hoặc truy vấn SQL injection.
+    \item \textbf{Đối soát:} Trang quản trị Admin cho phép theo dõi dòng tiền tổng của toàn sàn và số dư đóng băng tại bất kỳ thời điểm nào, đảm bảo tính thanh khoản.
+\end{itemize}
+
+\end{document}

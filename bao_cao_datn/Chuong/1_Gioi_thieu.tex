@@ -1,0 +1,35 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Lý do chọn đề tài}
+Trong bối cảnh chuyển đổi số đang diễn ra mạnh mẽ, việc ứng dụng công nghệ để thúc đẩy kinh tế tuần hoàn (Circular Economy) đã trở thành một xu hướng tất yếu. Sách, với đặc tính là loại hàng hóa có giá trị tri thức bền vững và có khả năng tái sử dụng cao, là đối tượng lý tưởng để triển khai các mô hình trao đổi C2C (Customer-to-Customer). Tuy nhiên, tại thị trường Việt Nam, việc mua bán sách cũ vẫn gặp phải nhiều rào cản đáng kể:
+
+\begin{itemize}
+    \item \textbf{Niềm tin và Rủi ro lừa đảo:} Đây là vấn đề nghiêm trọng nhất trong các giao dịch cá nhân. Người mua thường phải đối mặt với tình trạng "tiền mất tật mang" khi chuyển khoản trước nhưng nhận về sách kém chất lượng, sách giả (sách photo) hoặc thậm chí không nhận được hàng. Ngược lại, người bán cũng lo ngại về các rủi ro từ phía đơn vị vận chuyển hoặc khách hàng không nhận hàng (bom hàng).
+    \item \textbf{Thiếu nền tảng quản lý chuyên nghiệp:} Hầu hết các giao dịch hiện nay diễn ra tự phát trên Facebook Groups hoặc Shopee (nhưng không chuyên biệt cho sách cũ). Người bán cá nhân thiếu công cụ để quản lý tồn kho, theo dõi dòng tiền và xây dựng uy tín lâu dài thông qua các đánh giá thực tế.
+    \item \textbf{Trải nghiệm mua hàng phức tạp:} Việc mua sách từ nhiều cá nhân khác nhau khiến khách hàng phải thực hiện nhiều lệnh thanh toán rời rạc, chịu nhiều lần phí vận chuyển và khó khăn trong việc theo dõi toàn bộ quá trình giao dịch.
+\end{itemize}
+
+Xuất phát từ thực tế đó, đề tài \textbf{"Phát triển nền tảng mua bán sách C2C hỗ trợ thanh toán trung gian"} được lựa chọn nhằm xây dựng một hệ sinh thái an toàn, minh bạch cho cộng đồng yêu sách. Trong đó, cơ chế \textbf{Thanh toán trung gian (Escrow)} đóng vai trò là hạt nhân công nghệ để giải quyết bài toán niềm tin giữa người mua và người bán.
+
+\section{Mục tiêu của dự án}
+Dự án hướng tới việc xây dựng một sản phẩm hoàn thiện, không chỉ dừng lại ở một trang thương mại điện tử thông thường mà còn tích hợp các giải pháp tài chính và quản lý thông minh:
+
+\begin{itemize}
+    \item \textbf{Hệ thống Escrow (Giam tiền):} Phát triển logic bảo vệ dòng tiền. Tiền của người mua sẽ được hệ thống đóng băng và chỉ giải ngân về ví của người bán khi người mua xác nhận đã nhận hàng đúng mô tả hoặc hết thời gian khiếu nại.
+    \item \textbf{Kiến trúc Tách đơn hàng (Cart Splitting):} Thiết kế giải pháp cho phép người dùng thanh toán một lần duy nhất cho một giỏ hàng chứa sản phẩm của nhiều shop. Hệ thống sẽ tự động tách thành các đơn hàng con (\texttt{SubOrder}) để từng người bán có thể xử lý độc lập.
+    \item \textbf{Hệ thống ví điện tử và Sổ cái (Ledger):} Xây dựng mô hình quản lý tài chính nội bộ cho phép theo dõi số dư khả dụng, số dư đang giam (escrow) và lịch sử biến động số dư theo thời gian thực với độ chính xác cao.
+    \item \textbf{Cơ chế đối soát hoa hồng:} Tự động hóa quy trình thu phí sàn (10\%) và phân bổ lợi nhuận cho các bên liên quan ngay khi giao dịch hoàn tất.
+\end{itemize}
+
+\section{Đối tượng và phạm vi nghiên cứu}
+\begin{itemize}
+    \item \textbf{Đối tượng nghiên cứu:} Quy trình vận hành thương mại điện tử C2C, các mô hình thanh toán trung gian trên thế giới và tại Việt Nam, nhu cầu thực tế của cộng đồng mua bán sách cũ.
+    \item \textbf{Phạm vi nghiên cứu:}
+    \begin{itemize}
+        \item \textbf{Về nghiệp vụ:} Tập trung vào các tính năng cốt lõi gồm: Quản lý gian hàng, Thanh toán trực tuyến VNPay, Tách đơn hàng, Khiếu nại \& Hoàn tiền, Rút tiền về ngân hàng.
+        \item \textbf{Về kỹ thuật:} Triển khai ứng dụng Web Full-stack sử dụng framework Next.js (App Router), ngôn ngữ TypeScript, quản lý dữ liệu bằng MySQL thông qua Prisma ORM, xác thực người dùng bằng Auth.js.
+    \end{itemize}
+\end{itemize}
+
+\end{document}

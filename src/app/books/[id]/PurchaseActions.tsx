@@ -1,7 +1,8 @@
 "use client";
 
 import { useCart } from "@/lib/cart";
-import { ShoppingCart, Zap, MessageSquare, Loader2 } from "lucide-react";
+import { ShoppingCart, Zap, MessageSquare, Loader2, Heart } from "lucide-react";
+import { toggleFavorite } from "@/lib/favorite-actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -19,14 +20,17 @@ interface PurchaseActionsProps {
       name: string;
     };
   };
+  initialIsFavorite?: boolean;
 }
 
-export function PurchaseActions({ book }: PurchaseActionsProps) {
+export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProps) {
   const { addToCart } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
   const [isAdded, setIsAdded] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+  const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
 
   const isSeller = session?.user?.id === book.sellerId;
 
@@ -47,6 +51,29 @@ export function PurchaseActions({ book }: PurchaseActionsProps) {
     if (isSeller) return;
     handleAddToCart();
     router.push("/checkout");
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!session) {
+      toast.error("Vui lòng đăng nhập để lưu sách yêu thích");
+      router.push(`/login?callbackUrl=${encodeURIComponent(`/books/${book.id}`)}`);
+      return;
+    }
+
+    setIsFavoriteLoading(true);
+    try {
+      const res = await toggleFavorite(book.id);
+      if (res.success) {
+        setIsFavorite(res.isFavorite);
+        toast.success(res.isFavorite ? "Đã thêm vào mục yêu thích" : "Đã xóa khỏi mục yêu thích");
+      } else {
+        toast.error(res.error || "Có lỗi xảy ra");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+    } finally {
+      setIsFavoriteLoading(false);
+    }
   };
 
   if (isSeller) {
@@ -124,6 +151,16 @@ export function PurchaseActions({ book }: PurchaseActionsProps) {
           <MessageSquare className="w-5 h-5 text-primary" />
         )}
         {isChatLoading ? "Đang kết nối..." : "Trò chuyện với người bán"}
+      </motion.button>
+
+      <motion.button 
+        whileTap={{ scale: 0.98 }}
+        disabled={isFavoriteLoading}
+        onClick={handleToggleFavorite}
+        className={`w-full bg-zinc-50 border border-zinc-100 text-zinc-600 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-zinc-100 transition-all ${isFavoriteLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+      >
+        <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : 'text-zinc-400'}`} />
+        {isFavorite ? "Bỏ yêu thích" : "Lưu vào mục yêu thích"}
       </motion.button>
     </div>
   );

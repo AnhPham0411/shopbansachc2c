@@ -1,0 +1,52 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Công nghệ phát triển ứng dụng Web}
+
+\subsection{Next.js Framework và TypeScript}
+Dự án sử dụng Next.js (phiên bản 14+) - một framework React mạnh mẽ hỗ trợ xây dựng các ứng dụng web quy mô lớn với hiệu năng tối ưu. Sự kết hợp với TypeScript giúp chuẩn hóa quy trình phát triển thông qua việc kiểm tra kiểu dữ liệu chặt chẽ.
+\begin{itemize}
+    \item \textbf{App Router \& React Server Components (RSC):} Next.js 14 chuyển dịch sang mô hình RSC, cho phép render các component phức tạp phía Server, giảm thiểu dung lượng JavaScript tải về trình duyệt (bundle size), từ đó cải thiện tốc độ tải trang (FCP) và trải nghiệm người dùng.
+    \item \textbf{Server Actions:} Thay thế cho các API Route truyền thống trong việc xử lý các form submission và mutation dữ liệu. Điều này giúp giảm thiểu code boilerplate và đảm bảo an toàn dữ liệu thông qua việc thực thi logic hoàn toàn ở phía Server.
+    \item \textbf{TypeScript Static Typing:} Đặc biệt quan trọng trong các module tính toán tài chính. Việc định nghĩa chặt chẽ các interface cho \texttt{Order}, \texttt{Transaction}, và \texttt{Wallet} giúp loại bỏ các lỗi logic phổ biến như sai số kiểu dữ liệu hoặc thiếu sót các trường dữ liệu bắt buộc.
+\end{itemize}
+
+\subsection{Tailwind CSS}
+Tailwind CSS được lựa chọn để giải quyết bài toán giao diện hiện đại và khả năng đáp ứng (responsiveness).
+\begin{itemize}
+    \item \textbf{Utility-first Paradigm:} Cho phép xây dựng giao diện trực tiếp trên file HTML/JSX thông qua các class tiện ích. Điều này giúp duy trì sự nhất quán về design system và dễ dàng bảo trì so với phương pháp viết CSS truyền thống.
+    \item \textbf{Responsive Design:} Hệ thống breakpoint tích hợp sẵn giúp ứng dụng hiển thị mượt mà trên nhiều thiết bị (Mobile, Tablet, Desktop) mà không cần viết quá nhiều Media Queries phức tạp.
+\end{itemize}
+
+\subsection{Prisma ORM và MySQL}
+Cơ sở dữ liệu là linh hồn của hệ thống C2C, nơi lưu trữ toàn bộ lịch sử giao dịch và số dư ví.
+\begin{itemize}
+    \item \textbf{MySQL (ACID Compliance):} Đảm bảo tính toàn vẹn của dữ liệu thông qua các đặc tính Atomic (Nguyên tử), Consistent (Nhất quán), Isolated (Cô lập) và Durable (Bền vững). Đây là yếu tố sống còn khi thực hiện các Database Transaction phức tạp như tách đơn hàng và chuyển tiền ví.
+    \item \textbf{Prisma Schema \& Migration:} Prisma cung cấp cách tiếp cận khai báo (declarative) để định nghĩa cấu trúc dữ liệu. Mọi thay đổi trong schema được quản lý qua hệ thống Migration, giúp đảm bảo sự đồng bộ giữa môi trường phát triển và thực tế.
+    \item \textbf{Type-safe Query Builder:} Prisma tự động sinh ra Client với các kiểu dữ liệu tương ứng, giúp lập trình viên truy vấn dữ liệu một cách an toàn, tránh lỗi Runtime và SQL Injection.
+\end{itemize}
+
+\section{Cổng thanh toán và Bảo mật}
+ 
+\subsection{Phương thức Thanh toán và Đối soát}
+Để giải quyết bài toán thanh toán đa dạng trong mô hình C2C, dự án tích hợp các cơ chế thanh toán linh hoạt.
+\begin{itemize}
+    \item \textbf{Thanh toán khi nhận hàng (COD):} Đây là phương thức phổ biến trong giao dịch sách cũ, cho phép người mua kiểm tra tình trạng sách trước khi xác nhận thanh toán.
+    \item \textbf{Thanh toán Trực tuyến (VNPay/MoMo):} Hệ thống hỗ trợ tích hợp các cổng thanh toán để xử lý giao dịch qua thẻ ATM, QR Code. Luồng dữ liệu được đảm bảo thông qua cơ chế IPN (Instant Payment Notification) để cập nhật trạng thái đơn hàng tự động và chính xác.
+\end{itemize}
+
+\subsection{Xác thực và Phân quyền (Auth.js)}
+Auth.js (trước đây là NextAuth.js) được sử dụng để quản lý danh tính người dùng.
+\begin{itemize}
+    \item \textbf{OAuth 2.0 \& Credentials Provider:} Hỗ trợ đăng nhập đa dạng qua Google, Facebook hoặc email/mật khẩu truyền thống.
+    \item \textbf{Session Management \& Middleware:} Sử dụng JWT (JSON Web Token) để quản lý phiên làm việc. Middleware của Next.js được cấu hình để bảo vệ các route nhạy cảm (ví dụ: trang quản lý ví của Seller), chỉ cho phép những người có quyền truy cập hợp lệ đi qua.
+\end{itemize}
+
+\section{Kiến trúc Ví điện tử và Sổ cái (Theoretical Background)}
+Một phần quan trọng trong cơ sở lý thuyết của dự án là mô hình quản lý dòng tiền trung gian.
+\begin{itemize}
+    \item \textbf{Mô hình Escrow (Ký quỹ):} Tiền được giam ở một trạng thái tạm thời (\texttt{escrow\_balance}). Trạng thái này đảm bảo tiền không thể bị rút ra cho đến khi các điều kiện hợp đồng (đơn hàng thành công) được thỏa mãn.
+    \item \textbf{Nguyên tắc Ledger (Sổ cái):} Mọi biến động số dư ví (dù chỉ 1 đồng) bắt buộc phải sinh ra một bản ghi giao dịch (\texttt{Transaction}) tương ứng. Bảng này tuân thủ nguyên tắc \textit{Immutable} (chỉ thêm mới, không sửa/xóa) để phục vụ việc đối soát và kiểm toán sau này.
+\end{itemize}
+
+\end{document}

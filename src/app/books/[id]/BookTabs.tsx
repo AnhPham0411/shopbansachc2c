@@ -1,15 +1,45 @@
 "use client";
 
 import { useState } from "react";
-import { Star, User, Shield, Truck } from "lucide-react";
+import { Star, User, Shield, Truck, MessageCircle, Reply, Send } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { replyToReview } from "@/lib/review-actions";
+import { toast } from "react-hot-toast";
 
 interface BookTabsProps {
   description: string | null;
   reviews: any[];
+  sellerId: string;
 }
 
-export function BookTabs({ description, reviews }: BookTabsProps) {
+export function BookTabs({ description, reviews, sellerId }: BookTabsProps) {
   const [activeTab, setActiveTab] = useState<"description" | "reviews">("description");
+  const { data: session } = useSession();
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentUser = session?.user as any;
+  const canReply = currentUser?.role === "ADMIN" || currentUser?.id === sellerId;
+
+  const handleReply = async (reviewId: string) => {
+    if (!replyContent.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await replyToReview(reviewId, replyContent);
+      if (res.success) {
+        toast.success("Đã đăng phản hồi");
+        setReplyContent("");
+        setReplyingTo(null);
+      } else {
+        toast.error(res.error || "Có lỗi xảy ra");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-12">
@@ -99,6 +129,71 @@ export function BookTabs({ description, reviews }: BookTabsProps) {
                       </div>
                     </div>
                     <p className="text-zinc-700 font-medium leading-relaxed italic">"{review.comment}"</p>
+
+                    {/* Replies List */}
+                    {review.replies && review.replies.length > 0 && (
+                      <div className="mt-6 ml-10 space-y-4">
+                        {review.replies.map((reply: any) => (
+                          <div key={reply.id} className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100 flex gap-4">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[10px]">
+                              {reply.user.name.charAt(0)}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-black text-zinc-900">{reply.user.name}</span>
+                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded">
+                                  {reply.user.role === "ADMIN" ? "Quản trị viên" : "Người bán"}
+                                </span>
+                                <span className="text-[9px] text-zinc-400 font-bold uppercase">
+                                  {new Date(reply.createdAt).toLocaleDateString('vi-VN')}
+                                </span>
+                              </div>
+                              <p className="text-xs font-medium text-zinc-600">{reply.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply Form Trigger/Form */}
+                    {canReply && (
+                      <div className="mt-4">
+                        {replyingTo === review.id ? (
+                          <div className="space-y-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                             <textarea 
+                                value={replyContent}
+                                onChange={(e) => setReplyContent(e.target.value)}
+                                placeholder="Viết phản hồi của bạn..."
+                                className="w-full bg-white border border-zinc-200 rounded-xl p-3 text-xs font-medium outline-none focus:ring-1 focus:ring-primary/20 min-h-[80px]"
+                             />
+                             <div className="flex justify-end gap-2">
+                                <button 
+                                  onClick={() => setReplyingTo(null)}
+                                  className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-600 uppercase"
+                                >
+                                  Hủy
+                                </button>
+                                <button 
+                                  disabled={isSubmitting || !replyContent.trim()}
+                                  onClick={() => handleReply(review.id)}
+                                  className="px-4 py-2 bg-primary text-white text-xs font-black rounded-lg shadow-md shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                  <Send className="w-3 h-3" />
+                                  Gửi phản hồi
+                                </button>
+                             </div>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setReplyingTo(review.id)}
+                            className="flex items-center gap-2 text-xs font-black text-zinc-400 hover:text-primary transition-colors uppercase tracking-widest"
+                          >
+                            <Reply className="w-3.5 h-3.5" />
+                            Phản hồi
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

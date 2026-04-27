@@ -105,8 +105,11 @@ export default function ChatClient() {
   };
 
   const activeConversation = conversations.find(c => c.id === activeId);
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
   const otherUser = activeConversation 
-    ? (activeConversation.buyerId === userId ? activeConversation.seller : activeConversation.buyer)
+    ? (isAdmin 
+        ? { name: `${activeConversation.buyer.name} & ${activeConversation.seller.name}` }
+        : (activeConversation.buyerId === userId ? activeConversation.seller : activeConversation.buyer))
     : null;
 
   if (isLoading && conversations.length === 0) {
@@ -145,7 +148,9 @@ export default function ChatClient() {
               </div>
             ) : (
               conversations.map((conv) => {
-                const partner = conv.buyerId === userId ? conv.seller : conv.buyer;
+                const partner = isAdmin 
+                  ? { name: `${conv.buyer.name} ⇄ ${conv.seller.name}` }
+                  : (conv.buyerId === userId ? conv.seller : conv.buyer);
                 const isActive = conv.id === activeId;
                 const unreadCount = conv._count?.messages || 0;
 
@@ -270,6 +275,11 @@ export default function ChatClient() {
                         )}
                         <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] md:max-w-[70%] group ${isMine ? "items-end" : "items-start"} flex flex-col`}>
+                            {isAdmin && (
+                              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
+                                {msg.senderId === activeConversation?.buyerId ? activeConversation?.buyer.name : activeConversation?.seller.name}
+                              </span>
+                            )}
                             <div className={`px-5 py-3.5 rounded-[24px] text-sm font-medium leading-relaxed shadow-sm ${
                               isMine 
                                 ? "bg-primary text-white rounded-tr-none" 

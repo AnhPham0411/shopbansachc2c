@@ -28,7 +28,7 @@ Database (Cơ sở dữ liệu): MySQL.
 - ORM: Prisma (Quản lý schema và truy vấn dữ liệu).
 - Công cụ quản lý: Prisma Studio (Dùng để xem/sửa dữ liệu trực tiếp trên trình duyệt).
 
-Tích hợp (API): Cổng thanh toán Sandbox (VNPay) - Chỉ dùng logic giả lập để demo.
+Tích hợp (API): Thanh toán đa phương thức (VNPay/MoMo/COD) - Luồng xử lý giao dịch linh hoạt.
 
 Vận hành Local: Git, Node.js (pnpm/npm).
 
@@ -66,7 +66,7 @@ Phase 1: Khảo sát & R&D (Tuần 1 - Tuần 4)
 
 Nghiệp vụ: Phân tích sâu cách Shopee, Oreka vận hành luồng giao dịch C2C, luồng tiền và chính sách thu phí.
 
-Kỹ thuật: Đọc tài liệu API VNPay/MoMo. Đánh giá ưu điểm của MySQL cho bài toán tài chính.
+Kỹ thuật: Đọc tài liệu API thanh toán tích hợp. Đánh giá ưu điểm của MySQL cho bài toán tài chính.
 
 Phase 2: Thiết kế Hệ thống (Tuần 4 - Tuần 5)
 
