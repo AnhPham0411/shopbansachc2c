@@ -8,6 +8,7 @@ import { LogoutButton } from "./LogoutButton";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useRouter } from "next/navigation";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -184,6 +185,8 @@ export function Navbar() {
                 <Heart className="w-6 h-6 group-hover:fill-primary group-hover:text-primary transition-all" />
               </Link>
             )}
+
+            {session && <NotificationBell />}
 
             <Link 
               href={sellLink} 

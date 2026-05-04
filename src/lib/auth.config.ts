@@ -33,7 +33,7 @@ export const authConfig = {
       const role = (auth?.user as any)?.role;
       
       const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
-      const isPublicRoute = ["/", "/login", "/register", "/cart"].some(path => 
+      const isPublicRoute = ["/", "/login", "/register", "/cart", "/forgot-password", "/reset-password", "/api/proxy-image"].some(path => 
         nextUrl.pathname === path || nextUrl.pathname.startsWith("/books/")
       );
       const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);

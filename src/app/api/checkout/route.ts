@@ -16,7 +16,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Giỏ hàng trống" }, { status: 400 });
     }
 
-    // 1. Validate that the buyer is NOT the seller of any item
+    // 1. Validate items and determine correct price
+    const validatedItems = [];
     for (const item of items) {
       if (item.sellerId === session.user.id) {
         return NextResponse.json(
@@ -24,10 +25,32 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
+
+      const book = await prisma.book.findUnique({ where: { id: item.id } });
+      if (!book) {
+        return NextResponse.json({ error: `Sách ${item.title} không tồn tại` }, { status: 400 });
+      }
+
+      // Check for accepted offer to determine the correct price
+      const acceptedOffer = await prisma.offer.findFirst({
+        where: {
+          buyerId: session.user.id,
+          bookId: item.id,
+          status: "ACCEPTED"
+        },
+        orderBy: { updatedAt: "desc" }
+      });
+
+      const validPrice = acceptedOffer ? Number(acceptedOffer.amount) : Number(book.price);
+
+      validatedItems.push({
+        ...item,
+        price: validPrice,
+      });
     }
 
     // 2. Calculate base totals & group by seller
-    const itemsBySeller = items.reduce((acc: any, item: any) => {
+    const itemsBySeller = validatedItems.reduce((acc: any, item: any) => {
       if (!acc[item.sellerId]) {
         acc[item.sellerId] = [];
       }
@@ -35,7 +58,7 @@ export async function POST(req: Request) {
       return acc;
     }, {});
 
-    const subTotalAmount = items.reduce(
+    const subTotalAmount = validatedItems.reduce(
       (sum: number, item: any) => sum + item.price * item.quantity,
       0
     );

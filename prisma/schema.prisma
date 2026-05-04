@@ -29,7 +29,40 @@ model User {
   favorites           Favorite[]
   reviewReplies       ReviewReply[]
 
+  // Advanced Features
+  isVerified       Boolean        @default(false)
+  verificationDocs String?        @db.Text
+  referralCode     String?        @unique
+  referredById     String?
+  referredBy       User?          @relation("Referrals", fields: [referredById], references: [id])
+  referrals        User[]         @relation("Referrals")
+  notifications    Notification[]
+  offersMade       Offer[]        @relation("BuyerOffers")
+  offersReceived   Offer[]        @relation("SellerOffers")
+  bundles          Bundle[]
+
+  // Password Reset
+  resetToken       String?        @unique
+  resetTokenExpiry DateTime?
+
+  privateNotes     PrivateNote[]
+
   @@map("user")
+}
+
+model PrivateNote {
+  id        String   @id @default(uuid())
+  userId    String
+  bookId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@map("privatenote")
 }
 
 model Book {
@@ -51,8 +84,92 @@ model Book {
   conversations Conversation[]
   favorites     Favorite[]
 
+  // Advanced Features
+  isbn          String?
+  priceHistory  PriceHistory[]
+  offers        Offer[]
+  bundleItems   BundleItem[]
+
   @@index([sellerId], map: "Book_sellerId_fkey")
+  @@index([isbn])
   @@map("book")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notification")
+}
+
+model Offer {
+  id        String      @id @default(uuid())
+  buyerId   String
+  sellerId  String
+  bookId    String
+  amount    Decimal     @db.Decimal(15, 2)
+  status    OfferStatus @default(PENDING)
+  message   String?     @db.Text
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  buyer  User @relation("BuyerOffers", fields: [buyerId], references: [id])
+  seller User @relation("SellerOffers", fields: [sellerId], references: [id])
+  book   Book @relation(fields: [bookId], references: [id])
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([bookId])
+  @@map("offer")
+}
+
+model PriceHistory {
+  id        String   @id @default(uuid())
+  bookId    String
+  price     Decimal  @db.Decimal(15, 2)
+  createdAt DateTime @default(now())
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@map("pricehistory")
+}
+
+model Bundle {
+  id                 String       @id @default(uuid())
+  sellerId           String
+  name               String
+  description        String?      @db.Text
+  discountPercentage Int          @default(0)
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  seller             User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  items              BundleItem[]
+
+  @@index([sellerId])
+  @@map("bundle")
+}
+
+model BundleItem {
+  id       String @id @default(uuid())
+  bundleId String
+  bookId   String
+
+  bundle Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, bookId])
+  @@map("bundleitem")
 }
 
 model Conversation {
@@ -342,4 +459,23 @@ enum Rank {
   PLATINUM
 
   @@map("user_rank")
+}
+
+enum NotificationType {
+  INFO
+  ORDER
+  OFFER
+  PRICE_DROP
+  SYSTEM
+
+  @@map("notification_type")
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+
+  @@map("offer_status")
 }

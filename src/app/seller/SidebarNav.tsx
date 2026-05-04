@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookPlus, Wallet, Settings, ShoppingBag, Shield } from "lucide-react";
+import { LayoutDashboard, BookPlus, Wallet, Settings, ShoppingBag, Shield, Tag } from "lucide-react";
 
 interface SidebarNavProps {
   role: string;
@@ -14,6 +14,7 @@ export function SidebarNav({ role }: SidebarNavProps) {
   const menuItems = [
     { name: "Tổng quan", href: "/seller", icon: LayoutDashboard },
     { name: "Quản lý sách", href: "/seller/books", icon: BookPlus },
+    { name: "Lời mời mua hàng", href: "/seller/offers", icon: Tag },
     { name: "Quản lý đơn hàng", href: "/seller/orders", icon: ShoppingBag },
     { name: "Ví tiền", href: "/seller/wallet", icon: Wallet },
     { name: "Đơn mua (Buyer)", href: "/buyer/orders", icon: ShoppingBag, secondary: true },

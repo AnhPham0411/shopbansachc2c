@@ -117,11 +117,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <Link href="#" className="text-xs font-bold text-zinc-400 hover:text-primary transition-colors">
-                Quên mật khẩu?
-              </Link>
-            </div>
+
 
             <button
               type="submit"
@@ -133,7 +129,17 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-zinc-500 text-sm mt-10 font-medium">
+          <div className="flex justify-end mt-4 relative z-50">
+            <button 
+              type="button"
+              onClick={() => { window.location.href = '/forgot-password'; }}
+              className="text-xs font-bold text-zinc-400 hover:text-primary transition-colors inline-block py-2 cursor-pointer"
+            >
+              QUÊN MẬT KHẨU (BẤM VÀO ĐÂY)
+            </button>
+          </div>
+
+          <p className="text-center text-zinc-500 text-sm mt-6 font-medium">
             Chưa có tài khoản?{" "}
             <Link href="/register" className="text-primary hover:underline font-black">
               Đăng ký miễn phí

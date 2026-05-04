@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Shield, Truck, Info, BookOpen, Star, ArrowLeft, User } from "lucide-react";
@@ -6,6 +7,8 @@ import { PurchaseActions } from "./PurchaseActions";
 import { BookTabs } from "./BookTabs";
 import Link from "next/link";
 import { isBookFavorite } from "@/lib/favorite-actions";
+import { getPrivateNote } from "@/lib/note-actions";
+import { PrivateNoteBox } from "@/components/books/PrivateNoteBox";
 
 export default async function BookDetailPage({
   params,
@@ -43,6 +46,28 @@ export default async function BookDetailPage({
     ? book.reviews.reduce((acc, r) => acc + r.rating, 0) / book.reviews.length
     : 5;
 
+  const session = await auth();
+  const userId = (session?.user as any)?.id;
+  let negotiatedPrice: number | null = null;
+  
+  if (userId) {
+    const acceptedOffer = await prisma.offer.findFirst({
+      where: {
+        buyerId: userId,
+        bookId: id,
+        status: "ACCEPTED",
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (acceptedOffer) {
+      negotiatedPrice = Number(acceptedOffer.amount);
+    }
+  }
+
+  const initialNote = await getPrivateNote(id);
+
+  const finalPrice = negotiatedPrice !== null ? negotiatedPrice : Number(book.price);
+
   return (
     <main className="min-h-screen bg-[#F5F9F9] text-zinc-900">
       <Navbar />
@@ -59,7 +84,7 @@ export default async function BookDetailPage({
             <div className="sticky top-44 space-y-4">
               <div className="aspect-[3/4] bg-white rounded-[40px] border border-zinc-100 flex items-center justify-center overflow-hidden shadow-xl">
                 {book.imageUrl ? (
-                  <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
+                  <img src={`/api/proxy-image?url=${encodeURIComponent(book.imageUrl)}`} alt={book.title} className="w-full h-full object-cover" />
                 ) : (
                   <BookOpen className="w-24 h-24 text-zinc-100" />
                 )}
@@ -110,8 +135,13 @@ export default async function BookDetailPage({
             <div className="p-10 bg-white rounded-[48px] border border-zinc-100 shadow-2xl shadow-primary/5 space-y-10">
               <div className="flex items-end gap-4">
                 <span className="text-6xl font-black text-primary leading-none tracking-tighter">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(book.price))}
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(finalPrice)}
                 </span>
+                {negotiatedPrice !== null && (
+                  <span className="mb-2 px-3 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-lg uppercase tracking-widest border border-primary/20">
+                    Giá thương lượng
+                  </span>
+                )}
                 {book.stockQuantity > 0 ? (
                   <span className="mb-2 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-lg uppercase tracking-widest">Còn {book.stockQuantity} cuốn</span>
                 ) : (
@@ -122,7 +152,7 @@ export default async function BookDetailPage({
               <PurchaseActions 
                 book={{
                   ...book,
-                  price: Number(book.price)
+                  price: finalPrice
                 } as any} 
                 initialIsFavorite={isFavorite}
               />
@@ -144,6 +174,12 @@ export default async function BookDetailPage({
             </div>
 
             <BookTabs description={book.description} reviews={book.reviews} sellerId={book.sellerId} />
+
+            {userId && (
+              <div className="mt-8">
+                <PrivateNoteBox bookId={id} initialNote={initialNote || ""} />
+              </div>
+            )}
           </div>
         </div>
       </div>

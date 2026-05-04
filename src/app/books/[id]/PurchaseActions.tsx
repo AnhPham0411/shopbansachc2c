@@ -1,7 +1,8 @@
 "use client";
 
 import { useCart } from "@/lib/cart";
-import { ShoppingCart, Zap, MessageSquare, Loader2, Heart } from "lucide-react";
+import { ShoppingCart, Zap, MessageSquare, Loader2, Heart, Tag } from "lucide-react";
+import { OfferDialog } from "@/components/books/OfferDialog";
 import { toggleFavorite } from "@/lib/favorite-actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -31,6 +32,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [isOfferOpen, setIsOfferOpen] = useState(false);
 
   const isSeller = session?.user?.id === book.sellerId;
 
@@ -162,6 +164,26 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
         <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : 'text-zinc-400'}`} />
         {isFavorite ? "Bỏ yêu thích" : "Lưu vào mục yêu thích"}
       </motion.button>
+
+      {session && (
+        <motion.button 
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIsOfferOpen(true)}
+          className="w-full bg-orange-50 border border-orange-100 text-orange-600 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-100 transition-all"
+        >
+          <Tag className="w-5 h-5" />
+          Trả giá / Thương lượng
+        </motion.button>
+      )}
+
+      {session && (
+        <OfferDialog 
+          isOpen={isOfferOpen}
+          onClose={() => setIsOfferOpen(false)}
+          book={book}
+          buyerId={(session.user as any).id}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ export async function createBook(formData: FormData) {
   const description = formData.get("description") as string;
   const price = parseFloat(formData.get("price") as string);
   const stockQuantity = parseInt(formData.get("stockQuantity") as string);
+  const isbn = formData.get("isbn") as string;
 
   if (isNaN(price) || price < 0) throw new Error("Giá không hợp lệ");
   if (isNaN(stockQuantity) || stockQuantity < 0) throw new Error("Số lượng không hợp lệ");
@@ -23,7 +24,7 @@ export async function createBook(formData: FormData) {
   const category = formData.get("category") as any;
   const imageUrl = formData.get("imageUrl") as string;
 
-  await prisma.book.create({
+  const book = await prisma.book.create({
     data: {
       title,
       author,
@@ -33,8 +34,17 @@ export async function createBook(formData: FormData) {
       condition,
       category: category || "OTHERS",
       imageUrl,
+      isbn,
       sellerId: (session.user as any).id,
     },
+  });
+
+  // Record Initial Price History
+  await prisma.priceHistory.create({
+    data: {
+      bookId: book.id,
+      price: price,
+    }
   });
 
   revalidatePath("/seller/books");
@@ -74,9 +84,15 @@ export async function updateBook(id: string, formData: FormData) {
   const condition = formData.get("condition") as BookCondition;
   const category = formData.get("category") as any;
   const imageUrl = formData.get("imageUrl") as string;
+  const isbn = formData.get("isbn") as string;
 
   if (isNaN(price) || price < 0) throw new Error("Giá không hợp lệ");
   if (isNaN(stockQuantity) || stockQuantity < 0) throw new Error("Số lượng không hợp lệ");
+
+  const oldBook = await prisma.book.findUnique({
+    where: { id },
+    select: { price: true }
+  });
 
   await prisma.book.update({
     where: { 
@@ -92,8 +108,19 @@ export async function updateBook(id: string, formData: FormData) {
       condition,
       category: category || "OTHERS",
       imageUrl,
+      isbn,
     },
   });
+
+  // Record Price History if price changed
+  if (oldBook && Number(oldBook.price) !== price) {
+    await prisma.priceHistory.create({
+      data: {
+        bookId: id,
+        price: price,
+      }
+    });
+  }
 
   revalidatePath("/seller/books");
   revalidatePath("/books");

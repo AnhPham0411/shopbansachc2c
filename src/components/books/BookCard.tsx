@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, ShoppingCart, BookOpen } from "lucide-react";
+import { Star, ShoppingCart, BookOpen, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { toast } from "react-hot-toast";
@@ -18,6 +18,7 @@ interface Book {
   seller: {
     id: string;
     name: string;
+    isVerified: boolean;
   };
 }
 
@@ -73,7 +74,7 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
         <div className="relative aspect-[3/4] rounded-2xl overflow-hidden mb-4 bg-zinc-50 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
           {book.imageUrl ? (
             <img 
-              src={book.imageUrl} 
+              src={`/api/proxy-image?url=${encodeURIComponent(book.imageUrl)}`} 
               alt={book.title} 
               className="w-full h-full object-contain p-2 drop-shadow-xl group-hover:drop-shadow-2xl group-hover:-translate-y-1 transition-all duration-500"
               onError={(e) => {
@@ -107,7 +108,12 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
             <div className="w-5 h-5 rounded-full bg-zinc-100 flex items-center justify-center text-[8px] font-bold text-zinc-400">
               {book.seller.name?.charAt(0) || "U"}
             </div>
-            <span className="truncate">{book.seller.name || "Unknown Seller"}</span>
+            <span className="truncate flex items-center gap-1">
+              {book.seller.name || "Unknown Seller"}
+              {book.seller.isVerified && (
+                <CheckCircle className="w-3 h-3 text-blue-500 fill-blue-50" />
+              )}
+            </span>
           </div>
         </div>
         

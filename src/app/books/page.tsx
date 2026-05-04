@@ -21,7 +21,7 @@ export default async function BooksPage({
     orderBy: { createdAt: "desc" },
     include: {
       seller: {
-        select: { name: true, id: true }
+        select: { name: true, id: true, isVerified: true }
       }
     }
   });
