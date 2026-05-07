@@ -3,14 +3,24 @@
 import { prisma } from "@/lib/prisma";
 import { DiscountType } from "@prisma/client";
 
-export async function validateVoucher(code: string, userId: string, orderAmount: number) {
+export async function validateVoucher(code: string, userId: string, orderAmount: number, cartItems: any[]) {
   try {
     const voucher = await prisma.voucher.findUnique({
       where: { code: code.toUpperCase() },
+      include: { books: { select: { id: true } } }
     });
 
     if (!voucher) {
       return { success: false, error: "Mã giảm giá không tồn tại" };
+    }
+
+    // Check if voucher applies to any items in cart
+    const supportingItems = cartItems.filter(item => 
+      voucher.books.some(b => b.id === item.id)
+    );
+
+    if (supportingItems.length === 0) {
+      return { success: false, error: "Mã này không áp dụng cho sản phẩm nào trong giỏ hàng" };
     }
 
     const user = await prisma.user.findUnique({ 
@@ -44,15 +54,18 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
       };
     }
 
-    // Calculate discount
+    // Calculate discount only on supporting items
+    const supportingAmount = supportingItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    
     let discount = 0;
     if (voucher.discountType === DiscountType.PERCENTAGE) {
-      discount = orderAmount * (Number(voucher.discountValue) / 100);
+      discount = supportingAmount * (Number(voucher.discountValue) / 100);
       if (voucher.maxDiscount && discount > Number(voucher.maxDiscount)) {
         discount = Number(voucher.maxDiscount);
       }
     } else {
       discount = Number(voucher.discountValue);
+      if (discount > supportingAmount) discount = supportingAmount;
     }
 
     return {
@@ -67,6 +80,8 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
   }
 }
 
+import { serializePrisma } from "@/lib/utils";
+
 export async function getActiveVouchers() {
   try {
     const vouchers = await prisma.voucher.findMany({
@@ -77,17 +92,16 @@ export async function getActiveVouchers() {
           { expiryDate: { gte: new Date() } }
         ]
       },
+      include: {
+        books: { select: { id: true } }
+      },
       orderBy: { createdAt: "desc" }
     });
     
-    // Convert Decimal to numbers for frontend if necessary, 
-    // although Prisma client might handle basic serialization in server actions.
-    return { success: true, vouchers: vouchers.map(v => ({
-      ...v,
-      discountValue: Number(v.discountValue),
-      minOrderAmount: Number(v.minOrderAmount),
-      maxDiscount: v.maxDiscount ? Number(v.maxDiscount) : null
-    })) };
+    return { 
+      success: true, 
+      vouchers: serializePrisma(vouchers) 
+    };
   } catch (error) {
     console.error("Error fetching vouchers:", error);
     return { success: false, vouchers: [] };
@@ -101,12 +115,7 @@ export async function getAllVouchers() {
     });
     return { 
       success: true, 
-      vouchers: vouchers.map(v => ({
-        ...v,
-        discountValue: Number(v.discountValue),
-        minOrderAmount: Number(v.minOrderAmount),
-        maxDiscount: v.maxDiscount ? Number(v.maxDiscount) : null
-      })) 
+      vouchers: serializePrisma(vouchers) 
     };
   } catch (error) {
     console.error("Error fetching all vouchers:", error);
@@ -129,7 +138,7 @@ export async function createVoucher(data: any) {
         minRank: data.minRank || "BRONZE",
       }
     });
-    return { success: true, voucher };
+    return { success: true, voucher: serializePrisma(voucher) };
   } catch (error: any) {
     console.error("Error creating voucher:", error);
     return { success: false, error: error.message || "Không thể tạo mã giảm giá" };

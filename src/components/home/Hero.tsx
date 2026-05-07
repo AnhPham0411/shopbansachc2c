@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ShieldCheck, Zap, ArrowRight, BookOpen, Star } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 export function Hero() {
   const { data: session, status } = useSession();
@@ -73,19 +74,15 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="relative hidden md:block"
         >
-          <div className="relative aspect-[4/5] max-w-md mx-auto rounded-[40px] overflow-hidden shadow-2xl border-8 border-white bg-white">
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
-            <div className="flex flex-col items-center justify-center h-full p-12 text-center space-y-6">
-               <div className="w-32 h-32 bg-primary/5 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-16 h-16 text-primary opacity-20" />
-               </div>
-               <div className="space-y-4">
-                 <div className="h-4 w-48 bg-zinc-100 rounded-full mx-auto" />
-                 <div className="h-4 w-40 bg-zinc-100 rounded-full mx-auto" />
-                 <div className="h-4 w-56 bg-zinc-100 rounded-full mx-auto" />
-               </div>
-               <p className="text-zinc-400 text-sm font-medium italic">"Giao diện tối giản, trải nghiệm tối đa"</p>
-            </div>
+          <div className="relative aspect-[4/5] max-w-md mx-auto rounded-[40px] overflow-hidden shadow-2xl border-8 border-white bg-white group">
+            <Image 
+              src="/hero-book.png" 
+              alt="The Art of Knowledge" 
+              fill 
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
 
           {/* Floating elements */}

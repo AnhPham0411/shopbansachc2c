@@ -9,9 +9,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, total, clearCart } = useCart();
+  const { 
+    cart, 
+    removeFromCart, 
+    updateQuantity, 
+    total, 
+    selectedTotal, 
+    toggleSelection, 
+    toggleAll, 
+    toggleSeller, 
+    clearCart 
+  } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const router = useRouter();
+
+  const selectedCount = cart.filter(item => item.selected !== false).length;
+  const isAllSelected = cart.length > 0 && selectedCount === cart.length;
 
   // Group items by Seller
   const groupedItems = cart.reduce((acc, item) => {
@@ -46,7 +59,7 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
-    if (cart.length === 0) return;
+    if (selectedCount === 0) return;
     router.push("/checkout");
   };
 
@@ -54,12 +67,38 @@ export default function CartPage() {
     <main className="min-h-screen bg-[#F8F9FA] text-zinc-900 pb-20">
       <Navbar />
       
-      <div className="container mx-auto px-6 md:px-12 pt-32">
-        <div className="flex items-center gap-4 mb-10">
-          <h1 className="text-4xl font-black tracking-tight">Giỏ hàng</h1>
-          <span className="px-3 py-1 bg-white border border-zinc-200 rounded-full text-xs font-bold text-zinc-500">
-            {cart.length} món
-          </span>
+      <div className="container mx-auto px-6 md:px-12 pt-44">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-black tracking-tight">Giỏ hàng</h1>
+            <span className="px-3 py-1 bg-white border border-zinc-200 rounded-full text-xs font-bold text-zinc-500">
+              {cart.length} món
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-2xl border border-zinc-200 shadow-sm self-start md:self-auto">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center">
+                <input 
+                  type="checkbox" 
+                  checked={isAllSelected}
+                  onChange={(e) => toggleAll(e.target.checked)}
+                  className="peer appearance-none w-6 h-6 border-2 border-zinc-200 rounded-lg checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                />
+                <svg className="absolute w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <span className="text-sm font-black text-zinc-700 group-hover:text-primary transition-colors">Chọn tất cả</span>
+            </label>
+            <div className="w-px h-4 bg-zinc-200 mx-1" />
+            <button 
+              onClick={() => clearCart()}
+              className="text-sm font-bold text-zinc-400 hover:text-red-500 transition-colors"
+            >
+              Xóa tất cả
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -74,19 +113,51 @@ export default function CartPage() {
                   className="bg-white rounded-[32px] border border-zinc-200 overflow-hidden shadow-sm"
                 >
                   <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          checked={groupedItems[sellerId].items.every(item => item.selected !== false)}
+                          onChange={(e) => toggleSeller(sellerId, e.target.checked)}
+                          className="peer appearance-none w-5 h-5 border-2 border-zinc-200 rounded-md checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                        />
+                        <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
                       </div>
-                      <span className="text-sm font-black text-zinc-700">Shop: {groupedItems[sellerId].sellerName}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <ShoppingBag className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <span className="text-sm font-black text-zinc-700">Shop: {groupedItems[sellerId].sellerName}</span>
+                      </div>
                     </div>
                   </div>
                   
                   <div className="divide-y divide-zinc-100">
                     {groupedItems[sellerId].items.map((item) => (
-                      <div key={item.id} className="p-6 flex gap-6">
-                        <div className="w-20 h-28 bg-zinc-50 rounded-2xl flex-shrink-0 flex items-center justify-center border border-zinc-100">
-                           <ShoppingBag className="w-8 h-8 text-zinc-200" />
+                      <div key={item.id} className="p-6 flex gap-6 items-center">
+                        <div className="relative flex items-center justify-center flex-shrink-0">
+                          <input 
+                            type="checkbox" 
+                            checked={item.selected !== false}
+                            onChange={() => toggleSelection(item.id)}
+                            className="peer appearance-none w-5 h-5 border-2 border-zinc-200 rounded-md checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                          />
+                          <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </div>
+                        <div className="w-20 h-28 bg-zinc-50 rounded-2xl flex-shrink-0 flex items-center justify-center border border-zinc-100 overflow-hidden">
+                          {item.imageUrl ? (
+                            <img 
+                              src={`/api/proxy-image?url=${encodeURIComponent(item.imageUrl)}`} 
+                              alt={item.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ShoppingBag className="w-8 h-8 text-zinc-200" />
+                          )}
                         </div>
                         <div className="flex-1 flex flex-col justify-between py-1">
                           <div className="flex justify-between items-start">
@@ -134,8 +205,8 @@ export default function CartPage() {
               
               <div className="space-y-4">
                 <div className="flex justify-between text-sm font-medium">
-                  <span className="text-zinc-500">Tạm tính ({cart.length} món)</span>
-                  <span className="text-zinc-900 font-bold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}</span>
+                  <span className="text-zinc-500">Tạm tính ({selectedCount} món đã chọn)</span>
+                  <span className="text-zinc-900 font-bold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-zinc-500">Vận chuyển</span>
@@ -143,7 +214,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm font-medium">
                   <span className="text-zinc-500">Bảo hiểm Escrow (2%)</span>
-                  <span className="text-zinc-900 font-bold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total * 0.02)}</span>
+                  <span className="text-zinc-900 font-bold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedTotal * 0.02)}</span>
                 </div>
               </div>
 
@@ -152,14 +223,14 @@ export default function CartPage() {
               <div className="flex justify-between items-end">
                 <span className="font-black text-zinc-900 uppercase tracking-wider text-xs">Tổng cộng</span>
                 <span className="text-3xl font-black text-primary">
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total * 1.02)}
+                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedTotal * 1.02)}
                 </span>
               </div>
 
               <button 
                 onClick={handleCheckout}
-                disabled={isCheckingOut}
-                className="w-full bg-secondary text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-3 hover:bg-[#e67500] transition-all shadow-xl shadow-secondary/20 disabled:opacity-50 text-lg"
+                disabled={isCheckingOut || selectedCount === 0}
+                className="w-full bg-secondary text-white font-black py-5 rounded-[24px] flex items-center justify-center gap-3 hover:bg-[#e67500] transition-all shadow-xl shadow-secondary/20 disabled:opacity-50 disabled:grayscale text-lg"
               >
                 {isCheckingOut ? "Đang thanh toán..." : "THANH TOÁN LIBRIS"}
                 {!isCheckingOut && <ChevronRight className="w-5 h-5" />}

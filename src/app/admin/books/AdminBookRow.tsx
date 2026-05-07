@@ -144,7 +144,7 @@ export function AdminBookRow({ book }: { book: any }) {
                          <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Giá bán (VNĐ)</label>
                          <div className="relative">
                            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-                           <input name="price" type="number" required defaultValue={Number(book.price)} className="w-full bg-zinc-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all" />
+                           <input name="price" type="number" required min="0" defaultValue={Number(book.price)} className="w-full bg-zinc-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all" />
                          </div>
                        </div>
 

@@ -25,7 +25,8 @@ import { useSession } from "next-auth/react";
 type PaymentMethod = "COD" | "VNPAY" | "MOMO";
 
 export default function CheckoutPage() {
-  const { cart, total, clearCart, isLoaded } = useCart();
+  const { cart: allItems, selectedTotal: total, removeSelected, isLoaded } = useCart();
+  const cart = allItems.filter(item => item.selected !== false);
   const { data: session } = useSession();
   const router = useRouter();
   
@@ -70,7 +71,7 @@ export default function CheckoutPage() {
     if (isLoaded && cart.length === 0 && !isProcessing && !isSuccess) {
       router.push("/cart");
     }
-  }, [cart, router, isProcessing, isLoaded, isSuccess]);
+  }, [cart.length, router, isProcessing, isLoaded, isSuccess]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -97,7 +98,7 @@ export default function CheckoutPage() {
     if (!codeToUse) return;
     setVoucherError("");
     
-    const result = await validateVoucher(codeToUse, session?.user?.id as string, total);
+    const result = await validateVoucher(codeToUse, session?.user?.id as string, total, cart);
     if (result.success) {
       setAppliedVoucher({
         code: result.code!,
@@ -134,9 +135,8 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Lỗi đặt hàng");
 
-      // Redirect to success or order recap
       setIsSuccess(true);
-      clearCart();
+      removeSelected();
       router.push(`/checkout/success/${data.orderId}`);
     } catch (error: any) {
       alert(error.message);
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-[#F6F7F9] text-zinc-900 pb-20">
       <Navbar />
       
-      <div className="container mx-auto px-6 md:px-12 pt-32 max-w-6xl">
+      <div className="container mx-auto px-6 md:px-12 pt-44 max-w-6xl">
         {/* Header Navigation */}
         <div className="flex items-center gap-4 mb-8">
           <Link href="/cart" className="p-2 bg-white rounded-xl border border-zinc-200 hover:border-primary/40 transition-all">
@@ -572,7 +572,11 @@ export default function CheckoutPage() {
                         const ranks = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
                         const isRankEligible = ranks.indexOf(userRank) >= ranks.indexOf(v.minRank || "BRONZE");
                         const isAmountEligible = total >= v.minOrderAmount;
-                        const isEligible = isRankEligible && isAmountEligible;
+                        
+                        // Check if this voucher is linked to any book in the current cart
+                        const isProductEligible = v.books?.some((vb: any) => cart.some(ci => ci.id === vb.id)) || (v.books === undefined); 
+                        
+                        const isEligible = isRankEligible && isAmountEligible && isProductEligible;
                         const shortDesc = v.discountType === "PERCENTAGE" 
                           ? `Giảm ${v.discountValue}%` 
                           : `Giảm ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v.discountValue)}`;

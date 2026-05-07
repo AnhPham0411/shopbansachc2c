@@ -20,6 +20,7 @@ interface PurchaseActionsProps {
     seller: {
       name: string;
     };
+    imageUrl?: string | null;
   };
   initialIsFavorite?: boolean;
 }
@@ -44,6 +45,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
       price: book.price,
       sellerId: book.sellerId,
       sellerName: book.seller.name,
+      imageUrl: book.imageUrl,
     });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);

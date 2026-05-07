@@ -139,16 +139,27 @@ export default async function AdminFinancePage() {
                         tx.type === 'REFUND' ? 'bg-red-500/10 text-red-600' :
                         tx.type === 'WITHDRAW_PENDING' ? 'bg-orange-500/10 text-orange-500' :
                         tx.type === 'WITHDRAW_SUCCESS' ? 'bg-green-500/10 text-green-500' :
+                        tx.type === 'IN_ESCROW' ? 'bg-blue-500/10 text-blue-600' :
+                        tx.type === 'ESCROW_RELEASE' ? 'bg-emerald-500/10 text-emerald-600' :
                         'bg-zinc-100 text-zinc-500'
                       }`}>
-                       {tx.type.replace('_', ' ')}
+                       {
+                          tx.type === 'IN_ESCROW' ? 'Chờ đối soát' :
+                          tx.type === 'ESCROW_RELEASE' ? 'Giải ngân' :
+                          tx.type === 'DEDUCT_FEE' ? 'Phí hệ thống' :
+                          tx.type === 'WITHDRAW_PENDING' ? 'Yêu cầu rút' :
+                          tx.type === 'WITHDRAW_SUCCESS' ? 'Rút tiền' :
+                          tx.type === 'DIRECT_SALE' ? 'Bán trực tiếp' :
+                          tx.type === 'REFUND' ? 'Hoàn tiền' : tx.type.replace('_', ' ')
+                       }
                      </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-zinc-600">
                     {tx.description}
                   </td>
                   <td className={`px-6 py-4 text-sm font-black text-right ${
-                    tx.amount.toString().startsWith('-') ? 'text-red-500' : 'text-green-600'
+                    tx.amount.toString().startsWith('-') ? 'text-red-500' : 
+                    tx.type === 'IN_ESCROW' ? 'text-blue-600' : 'text-green-600'
                   }`}>
                     {Number(tx.amount) > 0 ? '+' : ''}
                     {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(tx.amount))}

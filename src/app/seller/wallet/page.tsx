@@ -117,15 +117,25 @@ export default async function SellerWalletPage() {
                               tx.type === 'ESCROW_RELEASE' ? 'bg-green-50 text-green-600 border-green-100' :
                               tx.type === 'IN_ESCROW' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                               tx.type === 'DEDUCT_FEE' ? 'bg-red-50 text-red-600 border-red-100' :
-                              tx.type === 'WITHDRAW' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                              tx.type === 'REFUND' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                              tx.type.startsWith('WITHDRAW') ? 'bg-amber-50 text-amber-600 border-amber-100' :
                               'bg-zinc-50 text-zinc-500 border-zinc-200'
                             }`}>
-                              {tx.type.replace('_', ' ')}
+                              {
+                                tx.type === 'IN_ESCROW' ? 'Chờ đối soát' :
+                                tx.type === 'ESCROW_RELEASE' ? 'Giải ngân' :
+                                tx.type === 'DEDUCT_FEE' ? 'Phí hệ thống' :
+                                tx.type === 'WITHDRAW_PENDING' ? 'Đang rút tiền' :
+                                tx.type === 'WITHDRAW_SUCCESS' ? 'Đã rút tiền' :
+                                tx.type === 'DIRECT_SALE' ? 'Bán trực tiếp' :
+                                tx.type === 'REFUND' ? 'Hoàn tiền' : tx.type.replace('_', ' ')
+                              }
                             </span>
                             <p className="text-[10px] text-zinc-500 mt-1 font-medium">{tx.description}</p>
                           </td>
                           <td className={`px-8 py-5 text-sm font-black text-right ${
-                            tx.amount.toString().startsWith('-') ? 'text-red-500' : 'text-green-500'
+                            tx.amount.toString().startsWith('-') ? 'text-red-500' : 
+                            tx.type === 'IN_ESCROW' ? 'text-blue-500' : 'text-green-500'
                           }`}>
                             {Number(tx.amount) > 0 ? '+' : ''}
                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(tx.amount))}

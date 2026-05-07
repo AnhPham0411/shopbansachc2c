@@ -4,6 +4,7 @@ import { BookCard } from "@/components/books/BookCard";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, BookOpen } from "lucide-react";
+import { serializePrisma } from "@/lib/utils";
 
 interface Book {
   id: string;
@@ -63,13 +64,10 @@ export default async function CollectionPage({ params }: PageProps) {
     }
   });
 
-  const books = rawBooks.map(book => ({
-    ...book,
-    price: Number(book.price)
-  }));
+  const books = serializePrisma(rawBooks);
 
   return (
-    <main className="min-h-screen bg-white pt-32 pb-24">
+    <main className="min-h-screen bg-white pt-44 pb-24">
       <Navbar />
       
       <div className="container mx-auto px-6 md:px-12">

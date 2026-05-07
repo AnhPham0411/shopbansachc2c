@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, X, Tag, BookText, Hash, Info, Layers, Edit2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createBookAdmin, updateBookAdmin } from "./actions";
+import { useRouter } from "next/navigation";
 
 interface AdminBookFormProps {
   book?: any; // If provided, we are in edit mode
@@ -13,6 +14,7 @@ interface AdminBookFormProps {
 export function AdminBookForm({ book, mode = "create" }: AdminBookFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -155,6 +157,7 @@ export function AdminBookForm({ book, mode = "create" }: AdminBookFormProps) {
                         name="price"
                         type="number"
                         required
+                        min="0"
                         defaultValue={book?.price ? Number(book.price) : ""}
                         placeholder="50000"
                         className="w-full bg-zinc-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all"

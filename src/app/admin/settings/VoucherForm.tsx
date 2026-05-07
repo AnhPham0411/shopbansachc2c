@@ -117,10 +117,16 @@ export function VoucherForm({ onClose }: { onClose: () => void }) {
                 <input
                   required
                   type="number"
+                  min="0"
                   placeholder="0"
                   className="w-full bg-zinc-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all"
                   value={formData.discountValue}
-                  onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || Number(value) >= 0) {
+                      setFormData({ ...formData, discountValue: value });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -131,10 +137,16 @@ export function VoucherForm({ onClose }: { onClose: () => void }) {
                 <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                 <input
                   type="number"
+                  min="0"
                   placeholder="0"
                   className="w-full bg-zinc-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all"
                   value={formData.minOrderAmount}
-                  onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || Number(value) >= 0) {
+                      setFormData({ ...formData, minOrderAmount: value });
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -143,9 +155,15 @@ export function VoucherForm({ onClose }: { onClose: () => void }) {
               <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4">Lượt sử dụng tối đa</label>
               <input
                 type="number"
+                min="0"
                 className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all"
                 value={formData.usageLimit}
-                onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "" || Number(value) >= 0) {
+                    setFormData({ ...formData, usageLimit: value });
+                  }
+                }}
               />
             </div>
 

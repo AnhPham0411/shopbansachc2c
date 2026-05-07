@@ -66,24 +66,40 @@ export async function POST(req: Request) {
     // 2. Handle Voucher
     let discountAmount = 0;
     let voucherId = null;
+    let totalSupportingSubTotal = 0;
 
     if (voucherCode) {
       const voucher = await prisma.voucher.findUnique({
-        where: { code: voucherCode.toUpperCase(), isActive: true }
+        where: { code: voucherCode.toUpperCase(), isActive: true },
+        include: { books: { select: { id: true } } }
       });
 
       if (voucher) {
-        // Simple re-validation
-        if (!voucher.expiryDate || new Date(voucher.expiryDate) >= new Date()) {
-          if (voucher.usedCount < voucher.usageLimit && subTotalAmount >= Number(voucher.minOrderAmount)) {
-            voucherId = voucher.id;
-            if (voucher.discountType === "PERCENTAGE") {
-              discountAmount = subTotalAmount * (Number(voucher.discountValue) / 100);
-              if (voucher.maxDiscount && discountAmount > Number(voucher.maxDiscount)) {
-                discountAmount = Number(voucher.maxDiscount);
+        // Find items that support this voucher
+        const supportingItems = validatedItems.filter(item => 
+          voucher.books.some(b => b.id === item.id)
+        );
+
+        if (supportingItems.length > 0) {
+          totalSupportingSubTotal = supportingItems.reduce(
+            (sum: number, item: any) => sum + item.price * item.quantity,
+            0
+          );
+
+          // Simple re-validation
+          if (!voucher.expiryDate || new Date(voucher.expiryDate) >= new Date()) {
+            if (voucher.usedCount < voucher.usageLimit && subTotalAmount >= Number(voucher.minOrderAmount)) {
+              voucherId = voucher.id;
+              if (voucher.discountType === "PERCENTAGE") {
+                discountAmount = totalSupportingSubTotal * (Number(voucher.discountValue) / 100);
+                if (voucher.maxDiscount && discountAmount > Number(voucher.maxDiscount)) {
+                  discountAmount = Number(voucher.maxDiscount);
+                }
+              } else {
+                discountAmount = Number(voucher.discountValue);
+                // Ensure discount doesn't exceed supporting subtotal
+                if (discountAmount > totalSupportingSubTotal) discountAmount = totalSupportingSubTotal;
               }
-            } else {
-              discountAmount = Number(voucher.discountValue);
             }
           }
         }
@@ -130,18 +146,37 @@ export async function POST(req: Request) {
 
         const isAdminSeller = admin && sellerId === admin.id;
 
-        // Calculate pro-rated discount for this seller
-        const sellerDiscount = subTotalAmount > 0
-          ? (discountAmount * (sellerSubTotal / subTotalAmount))
-          : 0;
+        // Calculate voucher discount for THIS seller's supporting products
+        let sellerVoucherDiscount = 0;
+        if (voucherId && totalSupportingSubTotal > 0) {
+          const voucher = await tx.voucher.findUnique({
+            where: { id: voucherId },
+            include: { books: { select: { id: true } } }
+          });
+          
+          const sellerSupportingSubTotal = sellerItems
+            .filter((item: any) => voucher?.books.some(b => b.id === item.id))
+            .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+          
+          sellerVoucherDiscount = (discountAmount * (sellerSupportingSubTotal / totalSupportingSubTotal));
+        }
 
-        const discountedSellerSubTotal = sellerSubTotal - sellerDiscount;
+        // 50/50 Split Logic:
+        // Seller bears 50%, Admin bears 50%
+        const sellerContribution = sellerVoucherDiscount * 0.5;
+        // If it's admin selling, they bear 100% (already handled by logic below)
 
         // Marketplace Logic: 
         // - Admin/Sàn self-selling: 0% Fee, 100% Net
         // - Others selling: 10% Fee, 90% Net
-        const platformFeeAmount = isAdminSeller ? 0 : (discountedSellerSubTotal * 0.1);
-        const netAmountAmount = discountedSellerSubTotal - platformFeeAmount;
+        const platformFeeAmount = isAdminSeller ? 0 : (sellerSubTotal * 0.1);
+        
+        // Final Net Amount for Seller:
+        // If Admin: they get everything minus the full discount
+        // If Other: they get (SubTotal - Fee) - (50% of Discount)
+        const netAmountAmount = isAdminSeller 
+          ? (sellerSubTotal - sellerVoucherDiscount) 
+          : (sellerSubTotal - platformFeeAmount - sellerContribution);
 
         const subOrder = await tx.subOrder.create({
           data: {
@@ -150,6 +185,7 @@ export async function POST(req: Request) {
             subTotal: new Decimal(sellerSubTotal),
             platformFee: new Decimal(platformFeeAmount),
             netAmount: new Decimal(netAmountAmount),
+            voucherDiscount: new Decimal(sellerVoucherDiscount),
             status: "PENDING",
             orderItems: {
               create: sellerItems.map((item: any) => ({
@@ -163,9 +199,13 @@ export async function POST(req: Request) {
 
         // 5. Revenue Distribution
         if (admin) {
-          // If Admin is selling, they get 100% (netAmountAmount).
-          // If others are selling, Admin gets the 10% fee (platformFeeAmount).
-          const adminRevenueAmount = isAdminSeller ? netAmountAmount : platformFeeAmount;
+          // Admin Revenue:
+          // If Admin is selling, they get 100% of their net (already includes full discount).
+          // If others are selling, Admin gets the 10% fee MINUS their 50% voucher share.
+          const adminContribution = sellerVoucherDiscount * 0.5;
+          const adminRevenueAmount = isAdminSeller 
+            ? netAmountAmount 
+            : (platformFeeAmount - adminContribution);
 
           if (adminRevenueAmount > 0) {
             const adminWallet = await tx.wallet.upsert({
@@ -181,15 +221,15 @@ export async function POST(req: Request) {
                 type: isAdminSeller ? "DIRECT_SALE" : "DEDUCT_FEE",
                 amount: new Decimal(adminRevenueAmount),
                 description: isAdminSeller
-                  ? `Doanh thu bán hàng trực tiếp (Trang chủ Libris) từ đơn hàng #${subOrder.id.slice(0, 8)}`
-                  : `Hoa hồng hệ thống (10%) từ đơn hàng #${subOrder.id.slice(0, 8)}`,
+                  ? `Doanh thu bán hàng trực tiếp từ đơn hàng #${subOrder.id.slice(0, 8)}`
+                  : `Hoa hồng hệ thống (10%) sau khi trừ 50% phí voucher cho đơn hàng #${subOrder.id.slice(0, 8)}`,
               },
             });
           }
         }
 
         if (!isAdminSeller) {
-          // Add 90% to Regular Seller Escrow
+          // Add Net to Regular Seller Escrow
           const sellerWallet = await tx.wallet.upsert({
             where: { userId: sellerId },
             update: { escrowBalance: { increment: netAmountAmount } },
@@ -202,7 +242,7 @@ export async function POST(req: Request) {
               referenceSubOrderId: subOrder.id,
               type: "IN_ESCROW",
               amount: new Decimal(netAmountAmount),
-              description: `Giam tiền chờ đối soát (90%) cho đơn hàng #${subOrder.id.slice(0, 8)}`,
+              description: `Tiền về ví chờ đối soát cho đơn hàng #${subOrder.id.slice(0, 8)} (Đã trừ 10% phí sàn và 50% phí voucher)`,
             },
           });
         }

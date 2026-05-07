@@ -46,7 +46,7 @@ export default async function OrderSuccessPage({
     <main className="min-h-screen bg-[#F8F9FA] pb-20">
       <Navbar />
       
-      <div className="container mx-auto px-6 pt-32 max-w-4xl">
+      <div className="container mx-auto px-6 pt-44 max-w-4xl">
         <SuccessLayout>
           {/* Main Success Card */}
           <div className="bg-white rounded-[48px] p-12 shadow-2xl shadow-primary/5 border border-zinc-100 flex flex-col items-center text-center relative overflow-hidden">

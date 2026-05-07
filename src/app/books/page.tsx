@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { BookCatalog } from "@/components/books/BookCatalog";
+import { serializePrisma } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -26,15 +27,12 @@ export default async function BooksPage({
     }
   });
 
-  const books = rawBooks.map(book => ({
-    ...book,
-    price: Number(book.price)
-  }));
+  const books = serializePrisma(rawBooks);
 
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-      <div className="pt-32">
+      <div className="pt-44">
         <BookCatalog initialBooks={books} initialSearch={search} />
       </div>
     </main>

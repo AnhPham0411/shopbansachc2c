@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Shield, Truck, Info, BookOpen, Star, ArrowLeft, User } from "lucide-react";
+import { serializePrisma } from "@/lib/utils";
 import { PurchaseActions } from "./PurchaseActions";
 import { BookTabs } from "./BookTabs";
 import Link from "next/link";
@@ -16,7 +17,7 @@ export default async function BookDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const book = await prisma.book.findUnique({
+  const rawBook = await prisma.book.findUnique({
     where: { id },
     include: {
       seller: {
@@ -36,9 +37,11 @@ export default async function BookDetailPage({
     }
   });
 
-  if (!book) {
+  if (!rawBook) {
     notFound();
   }
+
+  const book = serializePrisma(rawBook);
 
   const isFavorite = await isBookFavorite(id);
 
@@ -150,10 +153,10 @@ export default async function BookDetailPage({
               </div>
 
               <PurchaseActions 
-                book={{
+                book={serializePrisma({
                   ...book,
                   price: finalPrice
-                } as any} 
+                }) as any} 
                 initialIsFavorite={isFavorite}
               />
               

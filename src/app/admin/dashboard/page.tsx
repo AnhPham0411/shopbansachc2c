@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Wallet, Users, BookOpen, ArrowUpRight, ShieldCheck, Activity, CreditCard } from "lucide-react";
+import { Wallet, Users, BookOpen, ArrowUpRight, ShieldCheck, Activity, CreditCard, Clock } from "lucide-react";
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -96,17 +96,37 @@ export default async function AdminDashboardPage() {
                         <span className="text-sm font-medium">{tx.wallet.user.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-zinc-500">
-                      {tx.type}
+                    <td className="px-6 py-4">
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${
+                         tx.type === 'IN_ESCROW' ? 'text-blue-400' :
+                         tx.type === 'ESCROW_RELEASE' ? 'text-green-500' :
+                         tx.type === 'REFUND' ? 'text-red-400' :
+                         'text-zinc-500'
+                       }`}>
+                        {
+                          tx.type === 'IN_ESCROW' ? 'Chờ đối soát' :
+                          tx.type === 'ESCROW_RELEASE' ? 'Giải ngân' :
+                          tx.type === 'DEDUCT_FEE' ? 'Phí hệ thống' :
+                          tx.type === 'WITHDRAW_PENDING' ? 'Yêu cầu rút' :
+                          tx.type === 'WITHDRAW_SUCCESS' ? 'Rút tiền' :
+                          tx.type === 'DIRECT_SALE' ? 'Bán trực tiếp' :
+                          tx.type === 'REFUND' ? 'Hoàn tiền' : tx.type
+                        }
+                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-green-500">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-bold uppercase">Đã đối soát</span>
+                      <div className={`flex items-center gap-1.5 ${
+                        tx.type === 'IN_ESCROW' ? 'text-zinc-500' : 'text-green-500'
+                      }`}>
+                        {tx.type === 'IN_ESCROW' ? <Clock className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                        <span className="text-[10px] font-bold uppercase">
+                          {tx.type === 'IN_ESCROW' ? 'Đang tạm giữ' : 'Đã xác nhận'}
+                        </span>
                       </div>
                     </td>
                     <td className={`px-6 py-4 text-sm font-black text-right ${
-                       tx.amount.toString().startsWith('-') ? 'text-red-500' : 'text-primary'
+                       tx.amount.toString().startsWith('-') ? 'text-red-500' : 
+                       tx.type === 'IN_ESCROW' ? 'text-blue-400' : 'text-primary'
                     }`}>
                       {Number(tx.amount) > 0 ? '+' : ''}
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(tx.amount))}

@@ -1,13 +1,27 @@
 import { getFavorites } from "@/lib/favorite-actions";
 import { BookCard } from "@/components/books/BookCard";
-import { Heart, BookOpen } from "lucide-react";
+import { Heart, BookOpen, ChevronLeft } from "lucide-react";
+import Link from "next/link";
+import { Navbar } from "@/components/layout/Navbar";
 
 export default async function FavoritesPage() {
   const favoriteBooks = await getFavorites();
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 pt-32 pb-24">
-      <div className="container mx-auto px-4 md:px-12">
+    <main className="min-h-screen bg-[#F8F9FA] text-zinc-900 pb-24">
+      <Navbar />
+      
+      <div className="container mx-auto px-6 md:px-12 pt-44">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 text-zinc-500 hover:text-primary font-bold mb-8 transition-colors group"
+        >
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-zinc-100 shadow-sm group-hover:bg-primary group-hover:text-white transition-all">
+            <ChevronLeft className="w-5 h-5" />
+          </div>
+          Về trang chủ
+        </Link>
+
         <div className="flex items-center gap-4 mb-12">
           <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-zinc-100">
             <Heart className="w-8 h-8 text-primary fill-primary" />
@@ -27,12 +41,12 @@ export default async function FavoritesPage() {
             <p className="text-zinc-500 font-medium max-w-sm text-center mb-10">
               Hãy dạo quanh cửa hàng và lưu lại những cuốn sách bạn yêu thích để xem lại sau nhé!
             </p>
-            <a 
+            <Link 
               href="/books" 
               className="bg-primary text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all active:scale-95"
             >
               Khám phá ngay
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -42,6 +56,6 @@ export default async function FavoritesPage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

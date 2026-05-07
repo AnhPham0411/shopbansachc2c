@@ -49,6 +49,7 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
       price: book.price,
       sellerId: book.seller.id,
       sellerName: book.seller.name,
+      imageUrl: book.imageUrl,
     });
 
     toast.success(`Đã thêm "${book.title}" vào giỏ hàng!`, {

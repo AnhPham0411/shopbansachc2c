@@ -124,7 +124,7 @@ export default function ChatClient() {
     <div className="flex flex-col h-screen bg-white">
       <Navbar />
       
-      <div className="flex-1 flex overflow-hidden pt-20">
+      <div className="flex-1 flex overflow-hidden pt-44">
         {/* Sidebar */}
         <aside className={`${
           sidebarOpen || !activeId ? "flex" : "hidden"

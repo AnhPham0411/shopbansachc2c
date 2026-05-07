@@ -22,7 +22,7 @@ export function AdminSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-6 space-y-2">
+      <nav className="flex-1 px-6 py-2 space-y-2 overflow-y-auto">
         {/* ... existing links ... */}
         {[
           { name: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },

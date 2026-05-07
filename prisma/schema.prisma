@@ -89,6 +89,8 @@ model Book {
   priceHistory  PriceHistory[]
   offers        Offer[]
   bundleItems   BundleItem[]
+  privateNotes  PrivateNote[]
+  vouchers      Voucher[]     @relation("BookVouchers")
 
   @@index([sellerId], map: "Book_sellerId_fkey")
   @@index([isbn])
@@ -238,6 +240,7 @@ model SubOrder {
   status             OrderStatus         @default(PENDING)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  voucherDiscount    Decimal             @default(0.00) @db.Decimal(15, 2)
   dispute            Dispute?
   orderItems         OrderItem[]
   review             Review?
@@ -362,6 +365,7 @@ model Voucher {
   updatedAt      DateTime      @updatedAt
   minRank        Rank          @default(BRONZE)
   masterOrders   MasterOrder[]
+  books          Book[]        @relation("BookVouchers")
 
   @@map("voucher")
 }

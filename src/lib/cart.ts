@@ -9,6 +9,8 @@ export interface CartItem {
   sellerId: string;
   sellerName: string;
   quantity: number;
+  imageUrl?: string | null;
+  selected?: boolean;
 }
 
 export function useCart() {
@@ -30,14 +32,18 @@ export function useCart() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
-  const addToCart = (item: Omit<CartItem, "quantity">) => {
+  const addToCart = (item: Omit<CartItem, "quantity" | "selected">) => {
     const existingIndex = cart.findIndex((i) => i.id === item.id);
     if (existingIndex > -1) {
       const newCart = [...cart];
       newCart[existingIndex].quantity += 1;
+      newCart[existingIndex].selected = true;
+      if (item.imageUrl) {
+        newCart[existingIndex].imageUrl = item.imageUrl;
+      }
       saveCart(newCart);
     } else {
-      saveCart([...cart, { ...item, quantity: 1 }]);
+      saveCart([...cart, { ...item, quantity: 1, selected: true }]);
     }
   };
 
@@ -50,11 +56,41 @@ export function useCart() {
     saveCart(cart.map((item) => (item.id === id ? { ...item, quantity } : item)));
   };
 
+  const toggleSelection = (id: string) => {
+    saveCart(cart.map((item) => (item.id === id ? { ...item, selected: !item.selected } : item)));
+  };
+
+  const toggleAll = (selected: boolean) => {
+    saveCart(cart.map((item) => ({ ...item, selected })));
+  };
+
+  const toggleSeller = (sellerId: string, selected: boolean) => {
+    saveCart(cart.map((item) => (item.sellerId === sellerId ? { ...item, selected } : item)));
+  };
+
   const clearCart = () => {
     saveCart([]);
   };
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const removeSelected = () => {
+    saveCart(cart.filter((item) => item.selected === false));
+  };
 
-  return { cart, addToCart, removeFromCart, updateQuantity, clearCart, total, isLoaded };
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const selectedTotal = cart.reduce((sum, item) => item.selected !== false ? sum + item.price * item.quantity : sum, 0);
+
+  return { 
+    cart, 
+    addToCart, 
+    removeFromCart, 
+    updateQuantity, 
+    toggleSelection, 
+    toggleAll, 
+    toggleSeller, 
+    clearCart, 
+    removeSelected,
+    total, 
+    selectedTotal, 
+    isLoaded 
+  };
 }

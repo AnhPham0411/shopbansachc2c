@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { savePrivateNote } from "@/lib/note-actions";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { StickyNote, Save, Loader2 } from "lucide-react";
 
 interface PrivateNoteBoxProps {

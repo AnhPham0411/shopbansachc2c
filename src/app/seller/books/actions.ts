@@ -23,6 +23,7 @@ export async function createBook(formData: FormData) {
   const condition = formData.get("condition") as BookCondition;
   const category = formData.get("category") as any;
   const imageUrl = formData.get("imageUrl") as string;
+  const voucherIds = formData.getAll("vouchers") as string[];
 
   const book = await prisma.book.create({
     data: {
@@ -36,6 +37,9 @@ export async function createBook(formData: FormData) {
       imageUrl,
       isbn,
       sellerId: (session.user as any).id,
+      vouchers: {
+        connect: voucherIds.map(id => ({ id }))
+      }
     },
   });
 
@@ -85,6 +89,7 @@ export async function updateBook(id: string, formData: FormData) {
   const category = formData.get("category") as any;
   const imageUrl = formData.get("imageUrl") as string;
   const isbn = formData.get("isbn") as string;
+  const voucherIds = formData.getAll("vouchers") as string[];
 
   if (isNaN(price) || price < 0) throw new Error("Giá không hợp lệ");
   if (isNaN(stockQuantity) || stockQuantity < 0) throw new Error("Số lượng không hợp lệ");
@@ -109,6 +114,9 @@ export async function updateBook(id: string, formData: FormData) {
       category: category || "OTHERS",
       imageUrl,
       isbn,
+      vouchers: {
+        set: voucherIds.map(id => ({ id }))
+      }
     },
   });
 

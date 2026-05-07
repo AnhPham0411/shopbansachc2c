@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ShoppingBag, Calendar, Tag, Package, Plus } from "lucide-react";
 import { CreateBookModal } from "./CreateBookModal";
 import { SellerBookRow } from "./SellerBookRow";
+import { serializePrisma } from "@/lib/utils";
 
 export default async function SellerBooksPage() {
   const session = await auth();
@@ -10,16 +11,22 @@ export default async function SellerBooksPage() {
   const sellerName = (session?.user as any)?.name || "Unknown Seller";
   const sellerEmail = (session?.user as any)?.email || "";
 
+  const vouchers = await prisma.voucher.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" }
+  });
+
   const rawBooks = await prisma.book.findMany({
     where: { sellerId: userId },
+    include: {
+      vouchers: true
+    },
     orderBy: { createdAt: "desc" },
   });
 
   // Sanitize Decimal values for Client Component serialization
-  const books = rawBooks.map(book => ({
-    ...book,
-    price: Number(book.price)
-  }));
+  const books = serializePrisma(rawBooks);
+  const serializedVouchers = serializePrisma(vouchers);
 
   const stats = [
     { label: "Tổng sản phẩm", value: books.length, icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -39,7 +46,7 @@ export default async function SellerBooksPage() {
           <h2 className="text-3xl font-black text-zinc-900 tracking-tight">Quản lý kho hàng</h2>
           <p className="text-zinc-500 font-medium">Theo dõi và điều chỉnh các sản phẩm đang đăng bán của bạn</p>
         </div>
-        <CreateBookModal />
+        <CreateBookModal vouchers={serializedVouchers} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -73,6 +80,7 @@ export default async function SellerBooksPage() {
                   book={book} 
                   sellerName={sellerName} 
                   sellerEmail={sellerEmail} 
+                  availableVouchers={serializedVouchers}
                 />
               ))}
             </tbody>

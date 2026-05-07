@@ -5,7 +5,7 @@ import { Plus, X, Tag, BookText, Hash, Info, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createBook } from "./actions";
 
-export function CreateBookModal() {
+export function CreateBookModal({ vouchers = [] }: { vouchers?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -127,6 +127,7 @@ export function CreateBookModal() {
                       name="price"
                       type="number"
                       required
+                      min="0"
                       placeholder="50000"
                       className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-primary/50 transition-colors"
                     />
@@ -184,6 +185,35 @@ export function CreateBookModal() {
                       <option value="SKILLS" className="bg-[#0f172a]">Kỹ năng sống</option>
                       <option value="OTHERS" className="bg-[#0f172a]">Khác</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* Voucher Selection */}
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5 text-primary" />
+                    Áp dụng Voucher Admin (Bạn chịu 50% phí)
+                  </label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {vouchers.length > 0 ? vouchers.map((v: any) => (
+                      <label key={v.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/30 transition-all cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          name="vouchers" 
+                          value={v.id} 
+                          className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0 transition-all" 
+                        />
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-white group-hover:text-primary transition-colors">{v.code}</p>
+                          <p className="text-[10px] text-zinc-500">
+                            {v.discountType === 'PERCENTAGE' ? `Giảm ${v.discountValue}%` : `Giảm ${new Intl.NumberFormat('vi-VN').format(v.discountValue)}đ`}
+                            {v.maxDiscount ? ` (Tối đa ${new Intl.NumberFormat('vi-VN').format(v.maxDiscount)}đ)` : ''}
+                          </p>
+                        </div>
+                      </label>
+                    )) : (
+                      <p className="text-[10px] text-zinc-500 italic">Không có voucher admin nào khả dụng</p>
+                    )}
                   </div>
                 </div>
 

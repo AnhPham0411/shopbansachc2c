@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { getActiveVouchers } from "@/lib/voucher-actions";
 import { Promotions } from "@/components/home/Promotions";
+import { serializePrisma } from "@/lib/utils";
 
 export default async function Home() {
   const session = await auth();
@@ -21,10 +22,7 @@ export default async function Home() {
   });
 
   // Convert Decimal to Number for serialization to Client Components
-  const books = rawBooks.map(book => ({
-    ...book,
-    price: Number(book.price)
-  }));
+  const books = serializePrisma(rawBooks);
 
   const { vouchers } = await getActiveVouchers();
 
