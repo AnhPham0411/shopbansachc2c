@@ -53,6 +53,9 @@ export async function getFavorites() {
           include: {
             seller: {
               select: { name: true }
+            },
+            reviews: {
+              select: { rating: true }
             }
           }
         },

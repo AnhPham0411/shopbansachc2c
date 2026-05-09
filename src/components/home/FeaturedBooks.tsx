@@ -20,6 +20,7 @@ interface Book {
     id: string;
     name: string;
   };
+  reviews?: { rating: number }[];
 }
 
 interface FeaturedBooksProps {

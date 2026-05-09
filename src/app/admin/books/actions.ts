@@ -23,7 +23,7 @@ export async function createBookAdmin(formData: FormData) {
     const priceStr = formData.get("price") as string;
     const stockStr = formData.get("stockQuantity") as string;
     const condition = formData.get("condition") as BookCondition;
-    const category = formData.get("category") as any;
+    const categoryId = formData.get("categoryId") as string;
     const imageUrl = formData.get("imageUrl") as string;
 
     if (!title || !priceStr) {
@@ -45,7 +45,7 @@ export async function createBookAdmin(formData: FormData) {
         price,
         stockQuantity,
         condition,
-        category: category || "OTHERS",
+        categoryId: categoryId || null,
         imageUrl,
         sellerId: (session.user as any).id,
       },
@@ -71,7 +71,7 @@ export async function updateBookAdmin(id: string, formData: FormData) {
     const priceStr = formData.get("price") as string;
     const stockStr = formData.get("stockQuantity") as string;
     const condition = formData.get("condition") as BookCondition;
-    const category = formData.get("category") as any;
+    const categoryId = formData.get("categoryId") as string;
     const imageUrl = formData.get("imageUrl") as string;
 
     if (!title) return { success: false, error: "Tiêu đề không được để trống" };
@@ -92,7 +92,7 @@ export async function updateBookAdmin(id: string, formData: FormData) {
         price,
         stockQuantity,
         condition,
-        category: (category as any) || "OTHERS",
+        categoryId: categoryId || null,
         imageUrl,
       },
     });

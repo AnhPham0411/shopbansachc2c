@@ -16,6 +16,10 @@ export default async function AdminBooksPage() {
     }
   });
 
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+
   // Sanitize Decimal values for Client Component serialization
   const serializedBooks = JSON.parse(JSON.stringify(books, (key, value) => 
     typeof value === 'bigint' ? value.toString() : value
@@ -32,7 +36,7 @@ export default async function AdminBooksPage() {
           <h2 className="text-3xl font-black text-zinc-900 tracking-tight">Quản lý sản phẩm</h2>
           <p className="text-zinc-500 font-medium">Theo dõi và điều chỉnh toàn bộ sách trên hệ thống</p>
         </div>
-        <AdminBookForm mode="create" />
+        <AdminBookForm mode="create" categories={categories} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -69,7 +73,7 @@ export default async function AdminBooksPage() {
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {serializedBooks.map((book) => (
-              <AdminBookRow key={book.id} book={book} />
+              <AdminBookRow key={book.id} book={book} categories={categories} />
             ))}
           </tbody>
         </table>

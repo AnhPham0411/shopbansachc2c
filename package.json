@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "restore": "tsx prisma/restore.ts"
   },
   "dependencies": {
     "@prisma/client": "6.2.1",

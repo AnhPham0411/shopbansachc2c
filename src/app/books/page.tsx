@@ -23,17 +23,24 @@ export default async function BooksPage({
     include: {
       seller: {
         select: { name: true, id: true, isVerified: true }
+      },
+      reviews: {
+        select: { rating: true }
       }
     }
   });
 
   const books = serializePrisma(rawBooks);
 
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+  });
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
       <div className="pt-44">
-        <BookCatalog initialBooks={books} initialSearch={search} />
+        <BookCatalog initialBooks={books} initialSearch={search} categories={categories} />
       </div>
     </main>
   );

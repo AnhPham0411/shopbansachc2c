@@ -28,6 +28,7 @@ model User {
   rank                Rank           @default(BRONZE)
   favorites           Favorite[]
   reviewReplies       ReviewReply[]
+  addresses           UserAddress[]
 
   // Advanced Features
   isVerified       Boolean        @default(false)
@@ -75,6 +76,8 @@ model Book {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   category      BookCategory  @default(OTHERS)
+  categoryId    String?
+  categoryRef   Category?     @relation(fields: [categoryId], references: [id])
   author        String?
   description   String?       @db.Text
   imageUrl      String?       @db.Text
@@ -370,6 +373,17 @@ model Voucher {
   @@map("voucher")
 }
 
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  books     Book[]
+
+  @@map("category")
+}
+
 enum BookCategory {
   LITERATURE
   CHILDRENS
@@ -482,4 +496,20 @@ enum OfferStatus {
   EXPIRED
 
   @@map("offer_status")
+}
+
+model UserAddress {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?  // Ví dụ: "Nhà riêng", "Cơ quan"
+  name      String   // Tên người nhận
+  phone     String   // Số điện thoại nhận hàng
+  address   String   // Địa chỉ chi tiết
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("useraddress")
 }

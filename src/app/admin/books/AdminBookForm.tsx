@@ -9,9 +9,10 @@ import { useRouter } from "next/navigation";
 interface AdminBookFormProps {
   book?: any; // If provided, we are in edit mode
   mode?: "create" | "edit";
+  categories?: any[];
 }
 
-export function AdminBookForm({ book, mode = "create" }: AdminBookFormProps) {
+export function AdminBookForm({ book, mode = "create", categories = [] }: AdminBookFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -199,18 +200,15 @@ export function AdminBookForm({ book, mode = "create" }: AdminBookFormProps) {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Danh mục</label>
                     <select
-                      name="category"
+                      name="categoryId"
                       required
-                      defaultValue={book?.category || "OTHERS"}
+                      defaultValue={book?.categoryId || ""}
                       className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all appearance-none"
                     >
-                      <option value="LITERATURE">Văn học</option>
-                      <option value="CHILDRENS">Thiếu nhi</option>
-                      <option value="COMICS">Truyện tranh</option>
-                      <option value="TEXTBOOK">Sách giáo khoa</option>
-                      <option value="ECONOMY">Kinh tế</option>
-                      <option value="SKILLS">Kỹ năng sống</option>
-                      <option value="OTHERS">Khác</option>
+                      <option value="">Chọn danh mục</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

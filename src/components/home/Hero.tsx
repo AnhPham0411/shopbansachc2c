@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 
-export function Hero() {
+export function Hero({ avgRating = 4.9 }: { avgRating?: number }) {
   const { data: session, status } = useSession();
   
   const userRole = (session?.user as any)?.role;
@@ -79,6 +79,7 @@ export function Hero() {
               src="/hero-book.png" 
               alt="The Art of Knowledge" 
               fill 
+              sizes="(max-width: 768px) 100vw, 450px"
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               priority
             />
@@ -113,7 +114,7 @@ export function Hero() {
               </div>
               <div>
                 <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Đánh giá</div>
-                <div className="text-base font-black text-zinc-900">4.9/5 Sao</div>
+                <div className="text-base font-black text-zinc-900">{avgRating.toFixed(1)}/5 Sao</div>
               </div>
             </div>
           </motion.div>

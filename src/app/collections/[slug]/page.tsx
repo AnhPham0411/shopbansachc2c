@@ -60,6 +60,9 @@ export default async function CollectionPage({ params }: PageProps) {
     include: {
       seller: {
         select: { name: true, id: true }
+      },
+      reviews: {
+        select: { rating: true }
       }
     }
   });

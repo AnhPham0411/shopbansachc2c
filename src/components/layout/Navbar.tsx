@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List, MessageSquare, Heart, Trophy, Coins } from "lucide-react";
+import { BookOpen, Search, ShoppingCart, Menu, PlusCircle, Globe, HelpCircle, ChevronDown, List, MessageSquare, Heart, Trophy, Coins, LayoutGrid } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { LogoutButton } from "./LogoutButton";
@@ -10,12 +10,50 @@ import { useCart } from "@/lib/cart";
 import { useRouter } from "next/navigation";
 import { NotificationBell } from "./NotificationBell";
 
+
+
 export function Navbar() {
   const { data: session } = useSession();
   const [cartCount, setCartCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isAllCategoriesOpen, setIsAllCategoriesOpen] = useState(false);
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([
+    { id: "LITERATURE", name: "Văn học" },
+    { id: "CHILDRENS", name: "Thiếu nhi" },
+    { id: "COMICS", name: "Truyện tranh" },
+    { id: "TEXTBOOK", name: "Sách giáo khoa" },
+    { id: "ECONOMY", name: "Kinh tế" },
+    { id: "SKILLS", name: "Kỹ năng sống" },
+    { id: "OTHERS", name: "Khác" },
+  ]);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            setCategories(data);
+          } else {
+            const text = await res.text();
+            console.error("Expected JSON but received HTML:", text.slice(0, 100));
+          }
+        } else {
+          console.error("Fetch failed with status:", res.status);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +84,13 @@ export function Navbar() {
         try {
           const res = await fetch("/api/chat/unread");
           if (res.ok) {
-            const data = await res.json();
-            setUnreadChatCount(data.count);
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              const data = await res.json();
+              setUnreadChatCount(data.count);
+            } else {
+              console.error("Expected JSON from /api/chat/unread but received HTML");
+            }
           }
         } catch (error) {}
       };
@@ -57,6 +100,37 @@ export function Navbar() {
       return () => clearInterval(interval);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/books/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            setSuggestions(data);
+            setShowSuggestions(true);
+          } else {
+            console.error("Expected JSON from suggestions API but received HTML");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch suggestions", error);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const getDashboardLink = () => {
     const role = (session?.user as any)?.role;
@@ -114,11 +188,22 @@ export function Navbar() {
           <form 
             onSubmit={handleSearch}
             className="flex-1 max-w-3xl relative hidden sm:block"
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                setTimeout(() => setShowSuggestions(false), 200);
+              }
+            }}
           >
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
               placeholder="Tìm tên sách, tác giả, ISBN trên Libris..." 
               className="w-full bg-[#f0f2f5] border-none rounded-lg py-3 pl-5 pr-12 text-sm focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all outline-none"
             />
@@ -128,6 +213,42 @@ export function Navbar() {
             >
               <Search className="w-5 h-5" />
             </button>
+
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-zinc-100 mt-1 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                {suggestions.map((book) => (
+                  <Link 
+                    key={book.id} 
+                    href={`/books/${book.id}`}
+                    className="flex items-center gap-3 p-3 hover:bg-zinc-50 transition-colors cursor-pointer border-b border-zinc-50 last:border-b-0"
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      setSearchQuery("");
+                    }}
+                  >
+                    {book.imageUrl ? (
+                      <img src={book.imageUrl} alt={book.title} className="w-8 h-10 object-cover rounded" />
+                    ) : (
+                      <div className="w-8 h-10 bg-zinc-100 rounded flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-zinc-400" />
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-zinc-800 line-clamp-1">{book.title}</span>
+                      {book.author && (
+                        <span className="text-xs text-zinc-500 line-clamp-1">{book.author}</span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            
+            {showSuggestions && isLoadingSuggestions && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-zinc-100 mt-1 rounded-lg shadow-lg z-50 p-3 text-center text-sm text-zinc-500">
+                Đang tìm kiếm...
+              </div>
+            )}
           </form>
 
           {/* Auth & CTAs */}
@@ -204,24 +325,56 @@ export function Navbar() {
         </div>
       </nav>
 
-      {/* 3. Category Bar (Simple - Just Books) */}
-      <div className="bg-white border-b border-zinc-100 px-4 md:px-12 py-2 hidden md:block overflow-x-auto">
-        <div className="container mx-auto flex items-center gap-8 text-[13px] font-bold text-zinc-600">
-          <div className="flex items-center gap-2 cursor-pointer hover:text-primary">
-            <List className="w-4 h-4" />
+      {/* 3. Categories Bar */}
+      <div className="bg-white border-b border-zinc-100 py-2.5 px-4 md:px-12 hidden md:block">
+        <div className="container mx-auto flex items-center gap-6 text-xs font-bold text-zinc-600">
+          {/* Dropdown for All Categories */}
+          <div 
+            className="relative flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors"
+            onClick={() => setIsAllCategoriesOpen(!isAllCategoriesOpen)}
+          >
+            <LayoutGrid className="w-4 h-4" />
             <span>Tất cả danh mục</span>
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className={`w-3 h-3 transition-transform ${isAllCategoriesOpen ? "rotate-180" : ""}`} />
+            
+            {isAllCategoriesOpen && (
+              <div className="absolute top-full left-0 mt-2 bg-white border border-zinc-100 rounded-xl shadow-lg z-50 py-2 w-48 font-medium">
+                <Link 
+                  href="/books"
+                  className="block px-4 py-2 hover:bg-zinc-50 text-zinc-700 hover:text-primary text-sm transition-colors"
+                  onClick={() => setIsAllCategoriesOpen(false)}
+                >
+                  Tất cả danh mục
+                </Link>
+                {categories.map((cat) => (
+                  <Link 
+                    key={cat.id} 
+                    href={`/books?category=${cat.id}`}
+                    className="block px-4 py-2 hover:bg-zinc-50 text-zinc-700 hover:text-primary text-sm transition-colors"
+                    onClick={() => setIsAllCategoriesOpen(false)}
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="w-px h-4 bg-zinc-200" />
-          <nav className="flex items-center gap-10">
-            <Link href="/" className="text-primary border-b-2 border-primary pb-px">Sách</Link>
-            <Link href="/collections/sach-cu" className="hover:text-primary transition-colors">Sách cũ</Link>
-            <Link href="/collections/sach-moi" className="hover:text-primary transition-colors">Sách mới</Link>
-            <Link href="/collections/truyen-tranh" className="hover:text-primary transition-colors">Truyện tranh</Link>
-            <Link href="/collections/giao-khoa" className="hover:text-primary transition-colors">Sách giáo khoa</Link>
-          </nav>
+          
+          <span className="text-zinc-300">|</span>
+          
+          {/* 5 Categories */}
+          {categories.slice(0, 5).map((cat) => (
+            <Link 
+              key={cat.id} 
+              href={`/books?category=${cat.id}`} 
+              className="hover:text-primary transition-colors"
+            >
+              {cat.name}
+            </Link>
+          ))}
         </div>
       </div>
+
     </header>
   );
 }

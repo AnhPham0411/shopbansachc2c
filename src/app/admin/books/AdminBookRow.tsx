@@ -7,7 +7,7 @@ import Image from "next/image";
 import { deleteBookAdmin, updateBookAdmin } from "./actions";
 import { useRouter } from "next/navigation";
 
-export function AdminBookRow({ book }: { book: any }) {
+export function AdminBookRow({ book, categories = [] }: { book: any, categories?: any[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -168,14 +168,11 @@ export function AdminBookRow({ book }: { book: any }) {
                          </div>
                          <div className="space-y-2">
                            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Danh mục</label>
-                           <select name="category" defaultValue={book.category} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none">
-                             <option value="LITERATURE">Văn học</option>
-                             <option value="CHILDRENS">Thiếu nhi</option>
-                             <option value="COMICS">Truyện tranh</option>
-                             <option value="TEXTBOOK">Sách GK</option>
-                             <option value="ECONOMY">Kinh tế</option>
-                             <option value="SKILLS">Kỹ năng</option>
-                             <option value="OTHERS">Khác</option>
+                           <select name="categoryId" defaultValue={book.categoryId || ""} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none">
+                             <option value="">Chọn danh mục</option>
+                             {categories.map((cat) => (
+                               <option key={cat.id} value={cat.id}>{cat.name}</option>
+                             ))}
                            </select>
                          </div>
                        </div>

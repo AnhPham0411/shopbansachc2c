@@ -20,12 +20,18 @@ interface Book {
     name: string;
     isVerified: boolean;
   };
+  reviews?: { rating: number }[];
 }
 
 export function BookCard({ book, index }: { book: Book; index: number }) {
   const { addToCart } = useCart();
   const { data: session } = useSession();
   const isSeller = session?.user?.id === book.seller.id;
+
+  const reviews = book.reviews || [];
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+    : 5;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -121,9 +127,14 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
         <div className="space-y-3">
           <div className="flex items-center gap-1.5 text-secondary">
             <div className="flex items-center gap-0.5">
-              {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="w-3 h-3 fill-current" />)}
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star 
+                  key={s} 
+                  className={`w-3 h-3 ${s <= Math.round(avgRating) ? "fill-current" : "text-zinc-200 fill-transparent"}`} 
+                />
+              ))}
             </div>
-            <span className="text-[10px] font-bold text-zinc-400">4.9</span>
+            <span className="text-[10px] font-bold text-zinc-400">{avgRating.toFixed(1)}</span>
           </div>
 
           <div className="flex justify-between items-center pt-2 border-t border-zinc-50">

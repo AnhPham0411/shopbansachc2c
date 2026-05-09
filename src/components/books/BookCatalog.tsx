@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Filter, SlidersHorizontal, BookOpen, X } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, BookOpen, X, ChevronDown, ChevronUp } from "lucide-react";
 import { BookCard } from "./BookCard";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -18,18 +18,10 @@ interface Book {
     id: string;
     name: string;
   };
+  reviews?: { rating: number }[];
 }
 
-const CATEGORIES = [
-  { id: "ALL", label: "Tất cả danh mục" },
-  { id: "LITERATURE", label: "Văn học" },
-  { id: "CHILDRENS", label: "Thiếu nhi" },
-  { id: "COMICS", label: "Truyện tranh" },
-  { id: "TEXTBOOK", label: "Sách giáo khoa" },
-  { id: "ECONOMY", label: "Kinh tế" },
-  { id: "SKILLS", label: "Kỹ năng sống" },
-  { id: "OTHERS", label: "Khác" },
-];
+// CATEGORIES are now loaded dynamically from props
 
 const CONDITIONS = [
   { id: "ALL", label: "Tất cả tình trạng" },
@@ -47,7 +39,7 @@ const PRICE_RANGES = [
   { id: "over-200", label: "Trên 200.000đ", min: 200000, max: Infinity },
 ];
 
-export function BookCatalog({ initialBooks, initialSearch = "" }: { initialBooks: Book[], initialSearch?: string }) {
+export function BookCatalog({ initialBooks, initialSearch = "", categories = [] }: { initialBooks: Book[], initialSearch?: string, categories?: any[] }) {
   const [search, setSearch] = useState(initialSearch);
   const [authorSearch, setAuthorSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -55,13 +47,25 @@ export function BookCatalog({ initialBooks, initialSearch = "" }: { initialBooks
   const [selectedPriceRange, setSelectedPriceRange] = useState("ALL");
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
+  const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
+
+  const categoriesList = useMemo(() => {
+    return [
+      { id: "ALL", label: "Tất cả danh mục" },
+      ...categories.map(c => ({ id: c.id, label: c.name }))
+    ];
+  }, [categories]);
 
   const filteredBooks = useMemo(() => {
     return initialBooks
       .filter((book) => {
         const matchesSearch = book.title.toLowerCase().includes(search.toLowerCase());
         const matchesAuthor = !authorSearch || (book.author?.toLowerCase().includes(authorSearch.toLowerCase()));
-        const matchesCategory = selectedCategory === "ALL" || book.category === selectedCategory;
+        const matchesCategory = selectedCategory === "ALL" || (() => {
+          const selectedCat = categories.find(c => c.id === selectedCategory);
+          if (!selectedCat) return false;
+          return book.category === selectedCat.slug || book.categoryId === selectedCat.id;
+        })();
         const matchesCondition = selectedCondition === "ALL" || book.condition === selectedCondition;
         const matchesStock = !onlyInStock || book.stockQuantity > 0;
         
@@ -118,7 +122,7 @@ export function BookCatalog({ initialBooks, initialSearch = "" }: { initialBooks
               <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">Danh mục</h3>
             </div>
             <div className="space-y-2">
-              {CATEGORIES.map((cat) => (
+              {categoriesList.slice(0, isCategoriesExpanded ? categoriesList.length : 5).map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
@@ -131,6 +135,19 @@ export function BookCatalog({ initialBooks, initialSearch = "" }: { initialBooks
                   {cat.label}
                 </button>
               ))}
+              {categoriesList.length > 5 && (
+                <button
+                  onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-2 text-sm font-bold text-primary hover:bg-zinc-50 rounded-xl transition-all"
+                >
+                  <span>{isCategoriesExpanded ? "Thu gọn" : "Xem thêm"}</span>
+                  {isCategoriesExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
 

@@ -9,6 +9,8 @@ import { getActiveVouchers } from "@/lib/voucher-actions";
 import { Promotions } from "@/components/home/Promotions";
 import { serializePrisma } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const session = await auth();
   const rawBooks = await prisma.book.findMany({
@@ -17,6 +19,9 @@ export default async function Home() {
     include: {
       seller: {
         select: { name: true, id: true }
+      },
+      reviews: {
+        select: { rating: true }
       }
     }
   });
@@ -26,10 +31,17 @@ export default async function Home() {
 
   const { vouchers } = await getActiveVouchers();
 
+  const avgRatingData = await prisma.review.aggregate({
+    _avg: {
+      rating: true
+    }
+  });
+  const systemAvgRating = avgRatingData._avg.rating || 5.0;
+
   return (
     <main className="flex flex-col min-h-screen bg-white">
       <Navbar />
-      <Hero />
+      <Hero avgRating={systemAvgRating} />
       
       {vouchers.length > 0 && <Promotions vouchers={vouchers} />}
       

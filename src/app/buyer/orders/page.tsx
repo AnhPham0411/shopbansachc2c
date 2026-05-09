@@ -9,6 +9,20 @@ export default async function BuyerOrdersPage() {
   const session = await auth();
   const userId = (session?.user as any)?.id;
 
+  if (!userId) {
+    return (
+      <main className="min-h-screen bg-[#F5F9F9] text-zinc-900 pb-20">
+        <Navbar />
+        <div className="container mx-auto px-6 md:px-12 pt-44">
+          <div className="py-20 bg-white rounded-[40px] flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-100">
+            <ShoppingBag className="w-16 h-16 mb-4 opacity-10" />
+            <p className="font-bold">Vui lòng đăng nhập để xem đơn hàng.</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   const orders = await prisma.masterOrder.findMany({
     where: { buyerId: userId },
     include: {

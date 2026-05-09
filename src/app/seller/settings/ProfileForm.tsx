@@ -4,6 +4,7 @@ import { useState } from "react";
 import { User, Phone, MapPin, CreditCard, Save, CheckCircle, AlertCircle } from "lucide-react";
 import { updateProfile } from "./actions";
 import { motion, AnimatePresence } from "framer-motion";
+import AddressManagement from "@/components/profile/AddressManagement";
 
 interface ProfileFormProps {
   user: {
@@ -39,8 +40,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-8">
-      <AnimatePresence>
+    <>
+      <form action={handleSubmit} className="space-y-8">
+        <AnimatePresence>
         {message && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -150,5 +152,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
         </button>
       </div>
     </form>
+
+    <div className="mt-8">
+      <AddressManagement />
+    </div>
+    </>
   );
 }

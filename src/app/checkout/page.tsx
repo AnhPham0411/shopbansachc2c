@@ -21,6 +21,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { validateVoucher, getActiveVouchers } from "@/lib/voucher-actions";
 import { useSession } from "next-auth/react";
+import { getAddresses } from "@/app/seller/settings/address-actions";
 
 type PaymentMethod = "COD" | "VNPAY" | "MOMO";
 
@@ -42,9 +43,9 @@ export default function CheckoutPage() {
   const [voucherError, setVoucherError] = useState("");
   
   const [shippingInfo, setShippingInfo] = useState({
-    name: "Lê Tuấn Anh",
-    phone: "039 123 4567",
-    address: "Số 123, Đường Láng, Q. Đống Đa, Hà Nội",
+    name: "",
+    phone: "",
+    address: "",
   });
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -80,6 +81,21 @@ export default function CheckoutPage() {
       });
     }
   }, [isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded && session?.user?.id) {
+      getAddresses().then(res => {
+        if (res.success && res.data && res.data.length > 0) {
+          const defaultAddr = res.data.find((a: any) => a.isDefault) || res.data[0];
+          setShippingInfo({
+            name: defaultAddr.name,
+            phone: defaultAddr.phone,
+            address: defaultAddr.address,
+          });
+        }
+      });
+    }
+  }, [isLoaded, session]);
 
   if (!isLoaded || (cart.length === 0 && !isProcessing && !isSuccess)) {
     return (
