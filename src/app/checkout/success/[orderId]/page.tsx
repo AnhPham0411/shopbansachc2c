@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SuccessLayout } from "./SuccessLayout";
+import { cookies } from "next/headers";
+import { dictionaries } from "@/lib/dictionaries";
 
 export default async function OrderSuccessPage({
   params,
@@ -42,6 +44,10 @@ export default async function OrderSuccessPage({
     0
   );
 
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get("lang")?.value as "vi" | "en") || "vi";
+  const dict = dictionaries[lang];
+
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-20">
       <Navbar />
@@ -59,9 +65,9 @@ export default async function OrderSuccessPage({
                 <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping opacity-20" />
             </div>
 
-            <h1 className="text-4xl font-black text-zinc-900 mb-4 tracking-tighter">Đặt hàng thành công!</h1>
+            <h1 className="text-4xl font-black text-zinc-900 mb-4 tracking-tighter">{dict["success.title"]}</h1>
             <p className="text-zinc-500 font-medium max-w-md mx-auto mb-10">
-              Cảm ơn bạn đã tin tưởng Libris. Đơn hàng của bạn đang được các chủ tiệm chuẩn bị và sẽ sớm được giao đến bạn.
+              {dict["success.desc"]}
             </p>
 
             {/* Order Brief */}
@@ -69,19 +75,21 @@ export default async function OrderSuccessPage({
               <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 text-left">
                  <div className="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     <Package className="w-3.5 h-3.5" />
-                    Đơn hàng
+                    {dict["success.order"]}
                  </div>
                  <p className="text-sm font-black text-zinc-900">#{order.id.slice(0, 8).toUpperCase()}</p>
-                 <p className="text-[10px] text-zinc-500 font-bold">{totalItems} món đồ</p>
+                 <p className="text-[10px] text-zinc-500 font-bold">
+                   {dict["success.items"]?.replace("{count}", String(totalItems))}
+                 </p>
               </div>
 
               <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 text-left">
                  <div className="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     <CreditCard className="w-3.5 h-3.5" />
-                    Thanh toán
+                    {dict["success.payment"]}
                  </div>
                  <p className="text-sm font-black text-zinc-900">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(order.totalPayment))}
+                    {new Intl.NumberFormat(lang === 'vi' ? 'vi-VN' : 'en-US', { style: 'currency', currency: 'VND' }).format(Number(order.totalPayment))}
                  </p>
                  <p className="text-[10px] text-zinc-500 font-bold uppercase">{order.paymentMethod}</p>
               </div>
@@ -89,7 +97,7 @@ export default async function OrderSuccessPage({
               <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 text-left">
                  <div className="flex items-center gap-2 mb-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     <MapPin className="w-3.5 h-3.5" />
-                    Địa chỉ
+                    {dict["success.address"]}
                  </div>
                  <p className="text-sm font-black text-zinc-900 truncate">{order.shippingName}</p>
                  <p className="text-[10px] text-zinc-500 font-bold truncate">{order.shippingAddress}</p>
@@ -102,13 +110,13 @@ export default async function OrderSuccessPage({
                 href="/buyer/orders"
                 className="px-10 py-5 bg-zinc-900 text-white font-black rounded-3xl flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-zinc-200"
                >
-                 XEM ĐƠN HÀNG <ShoppingBag className="w-4 h-4" />
+                 {dict["success.viewOrder"]} <ShoppingBag className="w-4 h-4" />
                </Link>
                <Link 
                 href="/"
                 className="px-10 py-5 bg-white text-zinc-900 font-black rounded-3xl flex items-center justify-center gap-2 hover:bg-zinc-50 transition-all border border-zinc-200 active:scale-95"
                >
-                 TIẾP TỤC MUA SẮM <Home className="w-4 h-4" />
+                 {dict["success.continueShopping"]} <Home className="w-4 h-4" />
                </Link>
             </div>
           </div>
@@ -120,12 +128,12 @@ export default async function OrderSuccessPage({
                    <Package className="w-6 h-6" />
                 </div>
                 <div>
-                   <h4 className="font-black text-zinc-900 uppercase tracking-tighter">Bạn sẽ sớm nhận được sách</h4>
-                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">Hệ thống đang điều phối Seller chuẩn bị hàng</p>
+                   <h4 className="font-black text-zinc-900 uppercase tracking-tighter">{dict["success.infoTitle"]}</h4>
+                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest leading-none mt-1">{dict["success.infoDesc"]}</p>
                 </div>
              </div>
              <Link href="/buyer/orders" className="flex items-center gap-2 text-primary font-black text-sm group">
-               Kiểm tra hành trình đơn hàng <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+               {dict["success.trackOrder"]} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
              </Link>
           </div>
         </SuccessLayout>

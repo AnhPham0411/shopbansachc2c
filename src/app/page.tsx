@@ -8,11 +8,13 @@ import Link from "next/link";
 import { getActiveVouchers } from "@/lib/voucher-actions";
 import { Promotions } from "@/components/home/Promotions";
 import { serializePrisma } from "@/lib/utils";
+import { getDictionary } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const session = await auth();
+  const dict = await getDictionary();
   const rawBooks = await prisma.book.findMany({
     take: 40,
     orderBy: { createdAt: "desc" },
@@ -50,10 +52,10 @@ export default async function Home() {
         <div className="container mx-auto px-6 md:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { icon: Shield, title: "Thanh toán Escrow", desc: "Tiền chỉ nộp cho sàn, an toàn 100%" },
-              { icon: RefreshCcw, title: "Hoàn tiền tự động", desc: "Hủy đơn là tiền về ví ngay" },
-              { icon: Truck, title: "Vận chuyển tin cậy", desc: "Đối soát trực tiếp qua GHTK" },
-              { icon: Wallet, title: "Ví điện tử thông minh", desc: "Quản lý dòng tiền minh bạch" },
+              { icon: Shield, title: dict["home.trust1.title"], desc: dict["home.trust1.desc"] },
+              { icon: RefreshCcw, title: dict["home.trust2.title"], desc: dict["home.trust2.desc"] },
+              { icon: Truck, title: dict["home.trust3.title"], desc: dict["home.trust3.desc"] },
+              { icon: Wallet, title: dict["home.trust4.title"], desc: dict["home.trust4.desc"] },
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center text-center group">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
@@ -73,17 +75,15 @@ export default async function Home() {
       <section className="py-24 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-10" />
         <div className="container mx-auto px-6 md:px-12 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8 italic text-zinc-900">
-            "Sách cũ là những người bạn cũ, <br /> đợi chờ để được kể lại câu chuyện của mình."
-          </h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-8 italic text-zinc-900" dangerouslySetInnerHTML={{ __html: dict["home.cta.title"] }} />
           <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto">
-            Hàng ngàn người đang tìm kiếm cuốn sách bạn đang có. Đăng bán ngay trong 30 giây!
+            {dict["home.cta.desc"]}
           </p>
           <Link 
             href={!session ? "/login?callbackUrl=/seller/books" : "/seller/books"} 
             className="inline-block px-10 py-5 bg-primary text-white rounded-2xl font-black text-xl hover:bg-[#00a39f] transition-all shadow-xl shadow-primary/20 active:scale-95"
           >
-            Bắt đầu bán sách ngay
+            {dict["home.cta.button"]}
           </Link>
         </div>
       </section>
@@ -97,11 +97,11 @@ export default async function Home() {
             </div>
             <span className="text-xl font-bold tracking-tighter text-gradient">LIBRIS</span>
           </div>
-          <p className="text-zinc-500 text-sm">© 2026 Libris C2C Marketplace. Bảo lưu mọi quyền.</p>
+          <p className="text-zinc-500 text-sm">{dict["footer.rights"]}</p>
           <div className="flex gap-6 text-sm text-zinc-500 font-medium">
-            <a href="#" className="hover:text-primary transition-colors">Điều khoản</a>
-            <a href="#" className="hover:text-primary transition-colors">Bảo mật</a>
-            <a href="#" className="hover:text-primary transition-colors">Liên hệ</a>
+            <a href="#" className="hover:text-primary transition-colors">{dict["footer.terms"]}</a>
+            <a href="#" className="hover:text-primary transition-colors">{dict["footer.privacy"]}</a>
+            <a href="#" className="hover:text-primary transition-colors">{dict["footer.contact"]}</a>
           </div>
         </div>
       </footer>

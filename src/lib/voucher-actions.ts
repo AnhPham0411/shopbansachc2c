@@ -11,7 +11,7 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
     });
 
     if (!voucher) {
-      return { success: false, error: "Mã giảm giá không tồn tại" };
+      return { success: false, error: "voucher.notFound" };
     }
 
     // Check if voucher applies to any items in cart
@@ -20,7 +20,7 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
     );
 
     if (supportingItems.length === 0) {
-      return { success: false, error: "Mã này không áp dụng cho sản phẩm nào trong giỏ hàng" };
+      return { success: false, error: "voucher.notApplicable" };
     }
 
     const user = await prisma.user.findUnique({ 
@@ -31,26 +31,27 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
     if (user && voucher.minRank) {
       const ranks = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
       if (ranks.indexOf(user.rank) < ranks.indexOf(voucher.minRank)) {
-        return { success: false, error: `Cần hạng ${voucher.minRank} trở lên để sử dụng mã này` };
+        return { success: false, error: "voucher.rankRequired", params: { rank: voucher.minRank } };
       }
     }
 
     if (!voucher.isActive) {
-      return { success: false, error: "Mã giảm giá không còn hoạt động" };
+      return { success: false, error: "voucher.inactive" };
     }
 
     if (voucher.expiryDate && new Date(voucher.expiryDate) < new Date()) {
-      return { success: false, error: "Mã giảm giá đã hết hạn" };
+      return { success: false, error: "voucher.expired" };
     }
 
     if (voucher.usedCount >= voucher.usageLimit) {
-      return { success: false, error: "Mã giảm giá đã hết lượt sử dụng" };
+      return { success: false, error: "voucher.usageLimitExceeded" };
     }
 
     if (orderAmount < Number(voucher.minOrderAmount)) {
       return { 
         success: false, 
-        error: `Đơn hàng tối thiểu ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(voucher.minOrderAmount))} để sử dụng mã này` 
+        error: "voucher.minOrderAmountRequired", 
+        params: { amount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(voucher.minOrderAmount)) }
       };
     }
 
@@ -76,7 +77,7 @@ export async function validateVoucher(code: string, userId: string, orderAmount:
       description: voucher.description,
     };
   } catch (error: any) {
-    return { success: false, error: "Đã có lỗi xảy ra khi kiểm tra mã giảm giá" };
+    return { success: false, error: "voucher.error" };
   }
 }
 

@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { useRouter } from "next/navigation";
 import { NotificationBell } from "./NotificationBell";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 
 
@@ -21,14 +22,16 @@ export function Navbar() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAllCategoriesOpen, setIsAllCategoriesOpen] = useState(false);
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([
-    { id: "LITERATURE", name: "Văn học" },
-    { id: "CHILDRENS", name: "Thiếu nhi" },
-    { id: "COMICS", name: "Truyện tranh" },
-    { id: "TEXTBOOK", name: "Sách giáo khoa" },
-    { id: "ECONOMY", name: "Kinh tế" },
-    { id: "SKILLS", name: "Kỹ năng sống" },
-    { id: "OTHERS", name: "Khác" },
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
+  const [categories, setCategories] = useState<{id: string, name: string, slug?: string}[]>([
+    { id: "LITERATURE", name: "Văn học", slug: "van-hoc" },
+    { id: "CHILDRENS", name: "Thiếu nhi", slug: "thieu-nhi" },
+    { id: "COMICS", name: "Truyện tranh", slug: "truyen-tranh" },
+    { id: "TEXTBOOK", name: "Sách giáo khoa", slug: "sach-giao-khoa" },
+    { id: "ECONOMY", name: "Kinh tế", slug: "kinh-te" },
+    { id: "SKILLS", name: "Kỹ năng sống", slug: "ky-nang-song" },
+    { id: "OTHERS", name: "Khác", slug: "khac" },
   ]);
   const router = useRouter();
 
@@ -159,16 +162,46 @@ export function Navbar() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1 cursor-pointer hover:text-white/80 transition-colors">
+            <div 
+              className="relative flex items-center gap-1 cursor-pointer hover:text-white/80 transition-colors"
+              onClick={() => setIsLangOpen(!isLangOpen)}
+            >
               <span className="flex items-center gap-1">
-                 <img src="https://flagcdn.com/w20/vn.png" width="16" alt="VN Flag" className="rounded-sm" />
-                 Tiếng Việt
+                 <img src={language === "vi" ? "https://flagcdn.com/w20/vn.png" : "https://flagcdn.com/w20/gb.png"} width="16" alt="Flag" className="rounded-sm" />
+                 {language === "vi" ? "Tiếng Việt" : "English"}
               </span>
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown className={`w-3 h-3 transition-transform ${isLangOpen ? "rotate-180" : ""}`} />
+              
+              {isLangOpen && (
+                <div className="absolute top-full left-0 mt-2 bg-white text-zinc-800 rounded-lg shadow-xl z-50 py-1.5 w-36 border border-zinc-100 font-medium overflow-hidden">
+                  <div 
+                    className="px-4 py-2 hover:bg-zinc-50 cursor-pointer flex items-center gap-2 text-xs transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLanguage("vi");
+                      setIsLangOpen(false);
+                    }}
+                  >
+                    <img src="https://flagcdn.com/w20/vn.png" width="16" alt="VN Flag" className="rounded-sm" />
+                    Tiếng Việt
+                  </div>
+                  <div 
+                    className="px-4 py-2 hover:bg-zinc-50 cursor-pointer flex items-center gap-2 text-xs transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLanguage("en");
+                      setIsLangOpen(false);
+                    }}
+                  >
+                    <img src="https://flagcdn.com/w20/gb.png" width="16" alt="GB Flag" className="rounded-sm" />
+                    English
+                  </div>
+                </div>
+              )}
             </div>
             <Link href="/support" className="flex items-center gap-1.5 hover:text-white/80">
               <HelpCircle className="w-3.5 h-3.5" />
-              Hỗ trợ
+              {t("nav.support")}
             </Link>
           </div>
         </div>
@@ -204,7 +237,7 @@ export function Navbar() {
               onFocus={() => {
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
-              placeholder="Tìm tên sách, tác giả, ISBN trên Libris..." 
+              placeholder={t("nav.searchPlaceholder")} 
               className="w-full bg-[#f0f2f5] border-none rounded-lg py-3 pl-5 pr-12 text-sm focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all outline-none"
             />
             <button 
@@ -314,8 +347,8 @@ export function Navbar() {
               className="flex items-center gap-2 bg-[#ff5a1f] hover:bg-[#e64a19] text-white px-4 lg:px-6 py-2 md:py-2.5 rounded-lg text-[10px] md:text-sm font-black transition-all shadow-md active:scale-95 uppercase tracking-wide"
             >
               <PlusCircle className="w-4 h-4 md:hidden" />
-              <span className="hidden md:inline">Đăng bán</span>
-              <span className="md:hidden">Bán sách</span>
+              <span className="hidden md:inline">{t("nav.sell")}</span>
+              <span className="md:hidden">{t("nav.sell")}</span>
             </Link>
 
             <button className="lg:hidden p-2 text-zinc-600">
@@ -334,7 +367,7 @@ export function Navbar() {
             onClick={() => setIsAllCategoriesOpen(!isAllCategoriesOpen)}
           >
             <LayoutGrid className="w-4 h-4" />
-            <span>Tất cả danh mục</span>
+            <span>{t("category.all")}</span>
             <ChevronDown className={`w-3 h-3 transition-transform ${isAllCategoriesOpen ? "rotate-180" : ""}`} />
             
             {isAllCategoriesOpen && (
@@ -344,7 +377,7 @@ export function Navbar() {
                   className="block px-4 py-2 hover:bg-zinc-50 text-zinc-700 hover:text-primary text-sm transition-colors"
                   onClick={() => setIsAllCategoriesOpen(false)}
                 >
-                  Tất cả danh mục
+                  {t("category.all")}
                 </Link>
                 {categories.map((cat) => (
                   <Link 
@@ -353,7 +386,7 @@ export function Navbar() {
                     className="block px-4 py-2 hover:bg-zinc-50 text-zinc-700 hover:text-primary text-sm transition-colors"
                     onClick={() => setIsAllCategoriesOpen(false)}
                   >
-                    {cat.name}
+                    {t(`category.${cat.slug || cat.id.toLowerCase()}`)}
                   </Link>
                 ))}
               </div>
@@ -369,7 +402,7 @@ export function Navbar() {
               href={`/books?category=${cat.id}`} 
               className="hover:text-primary transition-colors"
             >
-              {cat.name}
+              {t(`category.${cat.slug || cat.id.toLowerCase()}`)}
             </Link>
           ))}
         </div>

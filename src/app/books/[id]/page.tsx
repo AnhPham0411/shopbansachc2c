@@ -10,6 +10,7 @@ import Link from "next/link";
 import { isBookFavorite } from "@/lib/favorite-actions";
 import { getPrivateNote } from "@/lib/note-actions";
 import { PrivateNoteBox } from "@/components/books/PrivateNoteBox";
+import { getDictionary, getLanguage, translateText } from "@/lib/i18n";
 
 export default async function BookDetailPage({
   params,
@@ -17,6 +18,7 @@ export default async function BookDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const dict = await getDictionary();
   const rawBook = await prisma.book.findUnique({
     where: { id },
     include: {
@@ -42,6 +44,14 @@ export default async function BookDetailPage({
   }
 
   const book = serializePrisma(rawBook);
+  const lang = await getLanguage();
+
+  if (lang === "en") {
+    book.title = await translateText(book.title, "vi", "en");
+    if (book.description) {
+      book.description = await translateText(book.description, "vi", "en");
+    }
+  }
 
   const isFavorite = await isBookFavorite(id);
 
@@ -78,7 +88,7 @@ export default async function BookDetailPage({
       <div className="container mx-auto px-6 md:px-12 pt-44 pb-24">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-primary mb-8 transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Quay lại danh sách
+          {dict["book.back"]}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
@@ -100,12 +110,12 @@ export default async function BookDetailPage({
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <span className="px-5 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/10">
-                  SÁCH {book.condition.replace('_', ' ')}
+                  {dict["book.condition"].replace("{condition}", book.condition.replace('_', ' '))}
                 </span>
                 <div className="flex items-center gap-1.5 text-secondary">
                   <Star className="w-5 h-5 fill-current" />
                   <span className="text-base font-black">{avgRating.toFixed(1)} / 5</span>
-                  <span className="text-zinc-400 text-xs font-bold ml-1">({book.reviews.length} đánh giá)</span>
+                  <span className="text-zinc-400 text-xs font-bold ml-1">{dict["book.reviews"].replace("{count}", String(book.reviews.length))}</span>
                 </div>
               </div>
               
@@ -114,7 +124,7 @@ export default async function BookDetailPage({
                   {book.title}
                 </h1>
                 <p className="text-xl font-bold text-zinc-400 uppercase tracking-widest">
-                  Tác giả: <span className="text-zinc-900">{book.author || "Chưa cập nhật"}</span>
+                  {dict["book.author"]} <span className="text-zinc-900">{book.author || dict["book.noAuthor"]}</span>
                 </p>
               </div>
               
@@ -124,13 +134,13 @@ export default async function BookDetailPage({
                     {book.seller.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Người bán</p>
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">{dict["book.seller"]}</p>
                     <p className="text-sm font-bold text-zinc-900">{book.seller.name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-primary font-black text-sm uppercase tracking-widest">
                   <Shield className="w-5 h-5" />
-                  Giao dịch an toàn 100%
+                  {dict["book.safeTransaction"]}
                 </div>
               </div>
             </div>
@@ -142,13 +152,13 @@ export default async function BookDetailPage({
                 </span>
                 {negotiatedPrice !== null && (
                   <span className="mb-2 px-3 py-1 bg-primary/10 text-primary text-[10px] font-black rounded-lg uppercase tracking-widest border border-primary/20">
-                    Giá thương lượng
+                    {dict["book.negotiatedPrice"]}
                   </span>
                 )}
                 {book.stockQuantity > 0 ? (
-                  <span className="mb-2 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-lg uppercase tracking-widest">Còn {book.stockQuantity} cuốn</span>
+                  <span className="mb-2 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-lg uppercase tracking-widest">{dict["book.inStock"].replace("{count}", String(book.stockQuantity))}</span>
                 ) : (
-                  <span className="mb-2 px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-lg uppercase tracking-widest">Hết hàng</span>
+                  <span className="mb-2 px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-lg uppercase tracking-widest">{dict["book.outOfStock"]}</span>
                 )}
               </div>
 
@@ -165,13 +175,13 @@ export default async function BookDetailPage({
                    <div className="w-12 h-12 rounded-2xl bg-[#F5F9F9] flex items-center justify-center border border-primary/10">
                       <Truck className="w-6 h-6 text-primary" />
                    </div>
-                   <p className="text-xs font-black text-zinc-500 uppercase tracking-widest leading-snug">Giao hàng<br/>toàn quốc</p>
+                   <p className="text-xs font-black text-zinc-500 uppercase tracking-widest leading-snug">{dict["book.shipping"]}</p>
                 </div>
                 <div className="flex items-center gap-4">
                    <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center border border-orange-100">
                       <Info className="w-6 h-6 text-secondary" />
                    </div>
-                   <p className="text-xs font-black text-zinc-500 uppercase tracking-widest leading-snug">Kiểm tra<br/>khi nhận sách</p>
+                   <p className="text-xs font-black text-zinc-500 uppercase tracking-widest leading-snug">{dict["book.inspection"]}</p>
                 </div>
               </div>
             </div>

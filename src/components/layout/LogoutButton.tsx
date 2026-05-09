@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LogOut, X, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut } from "next-auth/react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface LogoutButtonProps {
   variant?: "icon" | "sidebar";
@@ -15,12 +16,14 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ 
   variant = "icon", 
-  label = "Đăng xuất", 
+  label, 
   className, 
   iconClassName = "w-5 h-5",
   callbackUrl = "/"
 }: LogoutButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
+  const displayLabel = label || t("logout.submit");
 
   const handleLogout = () => {
     signOut({ callbackUrl });
@@ -32,7 +35,7 @@ export function LogoutButton({
         <button
           onClick={() => setIsOpen(true)}
           className={className || "p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"}
-          title={label}
+          title={displayLabel}
         >
           <LogOut className={iconClassName} />
         </button>
@@ -42,7 +45,7 @@ export function LogoutButton({
           className={className || "w-full flex items-center gap-4 px-4 py-3.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all font-bold text-sm group"}
         >
           <LogOut className={`${iconClassName} transition-transform group-hover:-translate-x-1`} />
-          <span>{label}</span>
+          <span>{displayLabel}</span>
         </button>
       )}
 
@@ -68,9 +71,9 @@ export function LogoutButton({
                    <AlertTriangle className="w-8 h-8 text-red-500" />
                 </div>
                 
-                <h3 className="text-2xl font-black text-zinc-900 mb-2">Đăng xuất?</h3>
+                <h3 className="text-2xl font-black text-zinc-900 mb-2">{t("logout.title")}</h3>
                 <p className="text-zinc-500 text-sm font-medium mb-8">
-                  Bạn có chắc chắn muốn đăng xuất không? Bạn sẽ cần đăng nhập lại để tiếp tục mua hàng hoặc quản lý sách.
+                  {t("logout.confirm")}
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 w-full">
@@ -78,13 +81,13 @@ export function LogoutButton({
                     onClick={() => setIsOpen(false)}
                     className="py-3 px-6 rounded-2xl bg-zinc-100 text-zinc-600 font-bold hover:bg-zinc-200 transition-all active:scale-95"
                   >
-                    Hủy bỏ
+                    {t("logout.cancel")}
                   </button>
                   <button 
                     onClick={handleLogout}
                     className="py-3 px-6 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 active:scale-95"
                   >
-                    Đăng xuất
+                    {t("logout.submit")}
                   </button>
                 </div>
               </div>

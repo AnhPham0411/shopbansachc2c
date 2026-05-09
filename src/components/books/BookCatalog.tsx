@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Search, Filter, SlidersHorizontal, BookOpen, X, ChevronDown, ChevronUp } from "lucide-react";
 import { BookCard } from "./BookCard";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Book {
   id: string;
@@ -42,6 +43,23 @@ const PRICE_RANGES = [
 export function BookCatalog({ initialBooks, initialSearch = "", categories = [] }: { initialBooks: Book[], initialSearch?: string, categories?: any[] }) {
   const [search, setSearch] = useState(initialSearch);
   const [authorSearch, setAuthorSearch] = useState("");
+  const { t, language } = useLanguage();
+
+  const conditionKeys: Record<string, string> = {
+    "ALL": "condition.all",
+    "NEW_100": "condition.new100",
+    "LIKE_NEW": "condition.likeNew",
+    "GOOD": "condition.good",
+    "OLD": "condition.old"
+  };
+
+  const priceKeys: Record<string, string> = {
+    "ALL": "price.all",
+    "under-50": "price.under50",
+    "50-100": "price.50to100",
+    "100-200": "price.100to200",
+    "over-200": "price.over200"
+  };
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedCondition, setSelectedCondition] = useState("ALL");
   const [selectedPriceRange, setSelectedPriceRange] = useState("ALL");
@@ -51,10 +69,10 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
 
   const categoriesList = useMemo(() => {
     return [
-      { id: "ALL", label: "Tất cả danh mục" },
-      ...categories.map(c => ({ id: c.id, label: c.name }))
+      { id: "ALL", label: t("category.all") },
+      ...categories.map((c: any) => ({ id: c.id, label: t(`category.${c.slug || c.id.toLowerCase()}`) }))
     ];
-  }, [categories]);
+  }, [categories, language, t]);
 
   const filteredBooks = useMemo(() => {
     return initialBooks
@@ -91,8 +109,8 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
-          <h1 className="text-5xl font-black text-zinc-900 mb-4 tracking-tight">Thư viện sách</h1>
-          <p className="text-zinc-500 font-medium text-lg">Khám phá kho sách C2C đa dạng với giá hời.</p>
+          <h1 className="text-5xl font-black text-zinc-900 mb-4 tracking-tight">{t("catalog.title")}</h1>
+          <p className="text-zinc-500 font-medium text-lg">{t("catalog.subtitle")}</p>
         </div>
 
       </div>
@@ -102,11 +120,11 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
         <aside className="w-full lg:w-64 space-y-10 shrink-0">
           {/* Author Search */}
           <div>
-            <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-4">Tìm theo Tác giả</h3>
+            <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-4">{t("catalog.searchAuthor")}</h3>
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tên tác giả..."
+                placeholder={t("catalog.searchAuthorPlaceholder")}
                 value={authorSearch}
                 onChange={(e) => setAuthorSearch(e.target.value)}
                 className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold outline-none focus:ring-1 focus:ring-primary/20"
@@ -119,7 +137,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
           <div>
             <div className="flex items-center gap-2 mb-6">
               <Filter className="w-4 h-4 text-primary" />
-              <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">Danh mục</h3>
+              <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">{t("catalog.categories")}</h3>
             </div>
             <div className="space-y-2">
               {categoriesList.slice(0, isCategoriesExpanded ? categoriesList.length : 5).map((cat) => (
@@ -140,7 +158,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                   onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                   className="w-full flex items-center justify-between px-4 py-2 text-sm font-bold text-primary hover:bg-zinc-50 rounded-xl transition-all"
                 >
-                  <span>{isCategoriesExpanded ? "Thu gọn" : "Xem thêm"}</span>
+                  <span>{isCategoriesExpanded ? t("catalog.collapse") : t("catalog.expand")}</span>
                   {isCategoriesExpanded ? (
                     <ChevronUp className="w-4 h-4" />
                   ) : (
@@ -153,7 +171,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
 
           {/* Price Range */}
           <div>
-            <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-6">Khoảng giá</h3>
+            <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-6">{t("catalog.priceRange")}</h3>
             <div className="space-y-2">
               {PRICE_RANGES.map((range) => (
                 <button
@@ -165,7 +183,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                       : "text-zinc-500 hover:bg-zinc-50"
                   }`}
                 >
-                  {range.label}
+                  {t(priceKeys[range.id] || range.label)}
                 </button>
               ))}
             </div>
@@ -175,7 +193,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
           <div>
             <div className="flex items-center gap-2 mb-6">
               <SlidersHorizontal className="w-4 h-4 text-primary" />
-              <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">Tình trạng</h3>
+              <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">{t("catalog.condition")}</h3>
             </div>
             <div className="space-y-2">
               {CONDITIONS.map((cond) => (
@@ -188,7 +206,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                       : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
-                  {cond.label}
+                  {t(conditionKeys[cond.id] || cond.label)}
                 </button>
               ))}
             </div>
@@ -203,21 +221,21 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                 onChange={(e) => setOnlyInStock(e.target.checked)}
                 className="w-4 h-4 rounded border-zinc-300 text-primary focus:ring-primary" 
               />
-              <span className="text-sm font-bold text-zinc-600 group-hover:text-zinc-900">Chỉ hiện sách còn hàng</span>
+              <span className="text-sm font-bold text-zinc-600 group-hover:text-zinc-900">{t("catalog.onlyInStock")}</span>
             </label>
           </div>
 
           {/* Sort */}
           <div>
-             <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-6">Sắp xếp</h3>
+             <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs mb-6">{t("catalog.sort")}</h3>
              <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-2.5 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/10"
              >
-                <option value="newest">Mới nhất</option>
-                <option value="price-asc">Giá: Thấp đến Cao</option>
-                <option value="price-desc">Giá: Cao đến Thấp</option>
+                <option value="newest">{t("catalog.sort.newest")}</option>
+                <option value="price-asc">{t("catalog.sort.priceAsc")}</option>
+                <option value="price-desc">{t("catalog.sort.priceDesc")}</option>
              </select>
           </div>
         </aside>
@@ -226,7 +244,9 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-8">
             <p className="text-zinc-400 font-bold text-sm">
-              Hiển thị <span className="text-zinc-900">{filteredBooks.length}</span> kết quả
+              {t("catalog.showResults").split("{count}")[0]}
+              <span className="text-zinc-900">{filteredBooks.length}</span>
+              {t("catalog.showResults").split("{count}")[1]}
             </p>
             {(selectedCategory !== "ALL" || selectedCondition !== "ALL" || search) && (
               <button 
@@ -237,7 +257,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                 }}
                 className="text-xs font-black text-primary hover:underline uppercase tracking-wider"
               >
-                Xóa tất cả bộ lọc
+                {t("catalog.clearFilters")}
               </button>
             )}
           </div>
@@ -255,8 +275,8 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
                   className="col-span-full py-32 bg-zinc-50 rounded-[40px] flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-100"
                 >
                   <BookOpen className="w-20 h-20 mb-6 opacity-10" />
-                  <h3 className="text-xl font-bold mb-2 text-zinc-900">Không tìm thấy sách</h3>
-                  <p className="max-w-xs text-center font-medium">Chúng tôi không tìm thấy cuốn sách nào khớp với bộ lọc của bạn.</p>
+                  <h3 className="text-xl font-bold mb-2 text-zinc-900">{t("catalog.notFound")}</h3>
+                  <p className="max-w-xs text-center font-medium">{t("catalog.notFoundDesc")}</p>
                 </motion.div>
               ) : (
                 filteredBooks.map((book, index) => (

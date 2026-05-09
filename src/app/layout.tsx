@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { Toaster } from "react-hot-toast";
+import { LanguageProvider } from "@/components/providers/LanguageProvider";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -23,8 +24,10 @@ export default function RootLayout({
     <html lang="vi" className={`${inter.variable} h-full antialiased dark`}>
       <body className="min-h-full flex flex-col font-sans">
         <SessionProvider>
-          <Toaster position="bottom-right" />
-          {children}
+          <LanguageProvider>
+            <Toaster position="bottom-right" />
+            {children}
+          </LanguageProvider>
         </SessionProvider>
       </body>
     </html>

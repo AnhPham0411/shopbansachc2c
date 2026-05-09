@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface PurchaseActionsProps {
   book: {
@@ -29,6 +30,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
   const { addToCart } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
   const [isAdded, setIsAdded] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
@@ -59,7 +61,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
 
   const handleToggleFavorite = async () => {
     if (!session) {
-      toast.error("Vui lòng đăng nhập để lưu sách yêu thích");
+      toast.error(t("book.loginToFavorite"));
       router.push(`/login?callbackUrl=${encodeURIComponent(`/books/${book.id}`)}`);
       return;
     }
@@ -69,12 +71,12 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
       const res = await toggleFavorite(book.id);
       if (res.success) {
         setIsFavorite(res.isFavorite);
-        toast.success(res.isFavorite ? "Đã thêm vào mục yêu thích" : "Đã xóa khỏi mục yêu thích");
+        toast.success(res.isFavorite ? t("book.addedToFavorites") : t("book.removedFromFavorites"));
       } else {
-        toast.error(res.error || "Có lỗi xảy ra");
+        toast.error(res.error || t("book.errorOccurred"));
       }
     } catch (error) {
-      toast.error("Có lỗi xảy ra");
+      toast.error(t("book.errorOccurred"));
     } finally {
       setIsFavoriteLoading(false);
     }
@@ -84,8 +86,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
     return (
       <div className="p-6 bg-zinc-50 rounded-[32px] border-2 border-dashed border-zinc-200 text-center">
         <p className="text-zinc-500 font-bold text-sm leading-relaxed">
-          Đây là sách bạn đang đăng bán. <br />
-          <span className="text-zinc-400 font-medium">Bạn không thể tự mua sản phẩm của chính mình.</span>
+          {t("book.sellerNotice")}
         </p>
       </div>
     );
@@ -104,7 +105,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
           }`}
         >
           <ShoppingCart className="w-5 h-5" />
-          {isAdded ? "ĐÃ THÊM VÀO GIỎ" : "THÊM VÀO GIỎ"}
+          {isAdded ? t("book.addedToCart") : t("book.addToCart")}
         </motion.button>
         <motion.button 
           whileTap={{ scale: 0.98 }}
@@ -112,7 +113,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
           className="flex-1 bg-secondary text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-[#e67500] transition-all shadow-lg shadow-secondary/20"
         >
           <Zap className="w-5 h-5 fill-current" />
-          MUA NGAY
+          {t("book.buyNow")}
         </motion.button>
       </div>
       
@@ -121,7 +122,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
         disabled={isChatLoading}
         onClick={async () => {
           if (!session) {
-            toast.error("Vui lòng đăng nhập để trò chuyện");
+            toast.error(t("book.loginToChat"));
             router.push(`/login?callbackUrl=${encodeURIComponent(`/books/${book.id}`)}`);
             return;
           }
@@ -139,11 +140,11 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
             if (res.ok) {
               router.push(`/chat?id=${data.id}`);
             } else {
-              toast.error(data.error || "Không thể khởi tạo cuộc trò chuyện");
+              toast.error(data.error || t("book.chatInitError"));
               setIsChatLoading(false);
             }
           } catch (error) {
-            toast.error("Đã có lỗi xảy ra, vui lòng thử lại");
+            toast.error(t("book.tryAgain"));
             setIsChatLoading(false);
           }
         }}
@@ -154,7 +155,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
         ) : (
           <MessageSquare className="w-5 h-5 text-primary" />
         )}
-        {isChatLoading ? "Đang kết nối..." : "Trò chuyện với người bán"}
+        {isChatLoading ? t("book.connecting") : t("book.chatWithSeller")}
       </motion.button>
 
       <motion.button 
@@ -164,7 +165,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
         className={`w-full bg-zinc-50 border border-zinc-100 text-zinc-600 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-zinc-100 transition-all ${isFavoriteLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
       >
         <Heart className={`w-5 h-5 ${isFavorite ? 'fill-primary text-primary' : 'text-zinc-400'}`} />
-        {isFavorite ? "Bỏ yêu thích" : "Lưu vào mục yêu thích"}
+        {isFavorite ? t("book.removeFromFavorites") : t("book.saveToFavorites")}
       </motion.button>
 
       {session && (
@@ -174,7 +175,7 @@ export function PurchaseActions({ book, initialIsFavorite }: PurchaseActionsProp
           className="w-full bg-orange-50 border border-orange-100 text-orange-600 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-100 transition-all"
         >
           <Tag className="w-5 h-5" />
-          Trả giá / Thương lượng
+          {t("book.negotiate")}
         </motion.button>
       )}
 

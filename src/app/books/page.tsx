@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { BookCatalog } from "@/components/books/BookCatalog";
 import { serializePrisma } from "@/lib/utils";
+import { translateBooks } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function BooksPage({
     }
   });
 
-  const books = serializePrisma(rawBooks);
+  const books = await translateBooks(serializePrisma(rawBooks));
 
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },

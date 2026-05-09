@@ -6,6 +6,8 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BookOpen, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useLanguage } from "@/components/providers/LanguageProvider";
+
 
 interface Book {
   id: string;
@@ -28,16 +30,17 @@ interface FeaturedBooksProps {
 }
 
 const TABS = [
-  { id: "all", label: "Tất cả sách" },
-  { id: "old", label: "Sách cũ" },
-  { id: "new", label: "Sách mới" },
-  { id: "comics", label: "Truyện tranh" },
-  { id: "textbook", label: "Sách giáo khoa" },
+  { id: "all", labelKey: "featured.all" },
+  { id: "old", labelKey: "featured.old" },
+  { id: "new", labelKey: "featured.new" },
+  { id: "comics", labelKey: "featured.comics" },
+  { id: "textbook", labelKey: "featured.textbook" },
 ];
 
 export function FeaturedBooks({ books }: FeaturedBooksProps) {
   const [activeTab, setActiveTab] = useState("all");
   const { data: session, status } = useSession();
+  const { t } = useLanguage();
   
   const userRole = (session?.user as any)?.role;
   const sellLink = !session
@@ -64,7 +67,7 @@ export function FeaturedBooks({ books }: FeaturedBooksProps) {
       <div className="container mx-auto px-6 md:px-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
           <div className="space-y-4">
-            <h2 className="text-4xl font-black text-zinc-900 tracking-tight">Khám phá kho sách</h2>
+            <h2 className="text-4xl font-black text-zinc-900 tracking-tight">{t("featured.title")}</h2>
             <div className="flex flex-wrap gap-2">
               {TABS.map((tab) => (
                 <button
@@ -76,13 +79,13 @@ export function FeaturedBooks({ books }: FeaturedBooksProps) {
                       : "bg-zinc-50 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
                   }`}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               ))}
             </div>
           </div>
           <Link href="/books" className="text-primary font-bold hover:underline flex items-center gap-1 group shrink-0">
-            Xem tất cả <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {t("featured.viewAll")} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
@@ -100,8 +103,8 @@ export function FeaturedBooks({ books }: FeaturedBooksProps) {
                 className="col-span-full py-24 bg-zinc-50 rounded-[40px] flex flex-col items-center justify-center text-zinc-400 border-2 border-dashed border-zinc-100"
               >
                 <BookOpen className="w-16 h-16 mb-4 opacity-10" />
-                <p className="font-bold">Hiện chưa có sách nào trong mục này.</p>
-                <Link href={sellLink} className="mt-4 text-primary font-bold hover:underline">Hãy là người đầu tiên đăng bán!</Link>
+                <p className="font-bold">{t("featured.empty")}</p>
+                <Link href={sellLink} className="mt-4 text-primary font-bold hover:underline">{t("featured.beFirst")}</Link>
               </motion.div>
             ) : (
               filteredBooks.map((book, index) => (
@@ -114,11 +117,11 @@ export function FeaturedBooks({ books }: FeaturedBooksProps) {
         {/* Categories / Trust CTA */}
         <div className="mt-20 p-12 bg-[#F5F9F9] rounded-[48px] flex flex-col md:flex-row items-center justify-between gap-8 border border-primary/5">
           <div className="max-w-md">
-            <h3 className="text-2xl font-black text-zinc-900 mb-4">Bạn có sách cũ muốn pass lại?</h3>
-            <p className="text-zinc-600 font-medium">Đăng bán sách của bạn ngay hôm nay và nhận thanh toán an toàn 100% qua ví Libris.</p>
+            <h3 className="text-2xl font-black text-zinc-900 mb-4">{t("featured.cta.title")}</h3>
+            <p className="text-zinc-600 font-medium">{t("featured.cta.desc")}</p>
           </div>
           <Link href={sellLink} className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-base hover:bg-[#00a39f] transition-all shadow-xl shadow-primary/10 whitespace-nowrap">
-            BẮT ĐẦU BÁN NGAY
+            {t("featured.cta.button")}
           </Link>
         </div>
       </div>

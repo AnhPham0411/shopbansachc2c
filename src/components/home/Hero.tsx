@@ -5,9 +5,11 @@ import { ShieldCheck, Zap, ArrowRight, BookOpen, Star } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 
 export function Hero({ avgRating = 4.9 }: { avgRating?: number }) {
   const { data: session, status } = useSession();
+  const { t } = useLanguage();
   
   const userRole = (session?.user as any)?.role;
   const sellLink = !session 
@@ -28,25 +30,24 @@ export function Hero({ avgRating = 4.9 }: { avgRating?: number }) {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/10 text-xs font-bold text-primary mb-8">
             <Zap className="w-3.5 h-3.5 fill-current" />
-            <span>Sàn mua bán sách cũ an toàn & hiện đại nhất</span>
+            <span>{t("hero.subtitle")}</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-[1.1] text-zinc-900">
-            Cho đi sách cũ, <br />
-            <span className="text-primary">nhận lại tri thức mới.</span>
+            {t("hero.title1")} <br />
+            <span className="text-primary">{t("hero.title2")}</span>
           </h1>
           
           <p className="text-xl text-zinc-600 mb-10 max-w-lg leading-relaxed font-medium">
-            Tham gia cộng đồng hàng nghìn người yêu sách. 
-            Giao dịch minh bạch, bảo mật với hệ thống <span className="text-zinc-900 font-bold underline decoration-primary/30">Libris Escrow</span>.
+            {t("hero.desc")}
           </p>
 
           <div className="flex flex-wrap gap-4">
             <Link href="/books" className="px-10 py-5 bg-secondary text-white rounded-2xl font-black text-lg flex items-center gap-2 hover:bg-[#e67500] transition-all shadow-lg shadow-secondary/20 active:scale-95">
-              MUA SÁCH NGAY <ArrowRight className="w-5 h-5" />
+              {t("hero.buy")} <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href={sellLink} className="px-10 py-5 bg-white text-primary rounded-2xl font-black text-lg border-2 border-primary/20 hover:bg-primary/5 transition-all flex items-center gap-2 active:scale-95">
-              BÁN SÁCH CỦA BẠN
+              {t("hero.sell")}
             </Link>
           </div>
 
