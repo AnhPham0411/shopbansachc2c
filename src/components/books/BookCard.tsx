@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { Star, ShoppingCart, BookOpen, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
-import { toast } from "react-hot-toast";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useSession } from "next-auth/react";
+import { toast } from "react-hot-toast";
 
 interface Book {
   id: string;
@@ -26,7 +27,15 @@ interface Book {
 export function BookCard({ book, index }: { book: Book; index: number }) {
   const { addToCart } = useCart();
   const { data: session } = useSession();
+  const { t } = useLanguage();
   const isSeller = session?.user?.id === book.seller.id;
+
+  const conditionKeys: Record<string, string> = {
+    "NEW_100": "condition.new100",
+    "LIKE_NEW": "condition.likeNew",
+    "GOOD": "condition.good",
+    "OLD": "condition.old"
+  };
 
   const reviews = book.reviews || [];
   const avgRating = reviews.length > 0
@@ -96,7 +105,7 @@ export function BookCard({ book, index }: { book: Book; index: number }) {
             <BookOpen className="w-12 h-12 text-zinc-200" />
           </div>
           <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-[10px] font-black text-primary uppercase tracking-wider border border-primary/10">
-            {book.condition.replace('_', ' ')}
+            {t(conditionKeys[book.condition] || book.condition)}
           </div>
         </div>
       </Link>

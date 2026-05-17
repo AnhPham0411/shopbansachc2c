@@ -1,10 +1,12 @@
 \documentclass[a4paper,12pt,twoside]{report} % Dùng 12pt làm mặc định
 \usepackage{scrextend}
 \changefontsizes{13pt} % Ép lên 13pt bằng scrextend
-\usepackage{mathptmx} % Đưa lên trước để set font chính xác
+\usepackage{newtxtext, newtxmath} % Font Times New Roman tốt hơn cho tiếng Việt
 \usepackage[T5]{fontenc} % Bắt buộc T5 cho tiếng Việt thay vì T1
 \usepackage[utf8]{inputenc}
 \usepackage[vietnamese]{babel}
+\usepackage{microtype} % Tự động căn chỉnh khoảng cách chữ để tránh tràn lề
+\emergencystretch 3em % Cho phép giãn cách linh hoạt hơn khi gặp từ dài
 \usepackage[top=2cm, bottom=2cm, left=3.5cm, right=2.5cm]{geometry}
 \usepackage{xurl}
 \usepackage{appendix}
@@ -63,6 +65,9 @@
 \input{Tu_viet_tat}
 \makenoidxglossaries
 
+% Ngăn chặn tràn lề cho các từ chuyên môn dài
+\hyphenation{Wallet-Trans-action escrow-Balance Sub-Order Master-Order Next-js}
+
 
 % ===================================================
 
@@ -82,7 +87,6 @@
 \def \INSTRUCTOR{TS. Nguyễn Tiến Thành}
 
 % ===================================================
-\titleformat{\chapter}[hang]{\centering\bfseries}{CHƯƠNG \thechapter.\ }{0pt}{}[]
 
 \titleformat 
     {\chapter} % command
@@ -179,7 +183,7 @@
 \titlecontents{chapter}
     [0.0cm]             % left margin
     {\bfseries\vspace{0.3cm}}                  % above code
-    {{\bfseries{\scshape} CHƯƠNG \thecontentslabel.\ }} % numbered format
+    {{\bfseries CHƯƠNG \thecontentslabel.\ }} % numbered format
     {}         % unnumbered format
     {\titlerule*[0.3pc]{.}\contentspage}
     
@@ -282,7 +286,7 @@
 \titlecontents{chapter}
     [0.0cm]             % left margin
     {\bfseries\vspace{0.3cm}}                  % above code
-    {{\bfseries{\scshape} \thecontentslabel.\ }} % numbered format
+    {{\bfseries \thecontentslabel.\ }} % numbered format
     {}         % unnumbered format
     {\titlerule*[0.3pc]{.}\contentspage} 
     

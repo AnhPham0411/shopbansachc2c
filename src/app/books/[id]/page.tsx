@@ -110,7 +110,13 @@ export default async function BookDetailPage({
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <span className="px-5 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/10">
-                  {dict["book.condition"].replace("{condition}", book.condition.replace('_', ' '))}
+                  {(() => {
+                    const conditionKey = book.condition === "NEW_100" ? "condition.new100" :
+                                         book.condition === "LIKE_NEW" ? "condition.likeNew" :
+                                         book.condition === "GOOD" ? "condition.good" : "condition.old";
+                    const conditionText = dict[conditionKey] || book.condition;
+                    return dict["book.condition"].replace("{condition}", conditionText);
+                  })()}
                 </span>
                 <div className="flex items-center gap-1.5 text-secondary">
                   <Star className="w-5 h-5 fill-current" />

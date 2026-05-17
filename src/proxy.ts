@@ -2,6 +2,12 @@ import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 
+const PUBLIC_API_PREFIXES = [
+  "/api/categories",
+  "/api/books/suggestions",
+  "/api/chat/unread",
+];
+
 // We use a separate instance of NextAuth with the base config to avoid importing Prisma in the Proxy
 const { auth } = NextAuth(authConfig);
 
@@ -11,13 +17,14 @@ export const proxy = auth((req) => {
   const role = (req.auth?.user as any)?.role;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
+  const isPublicApiRoute = PUBLIC_API_PREFIXES.some(path => nextUrl.pathname.startsWith(path));
   const isPublicRoute = ["/", "/login", "/register", "/cart", "/forgot-password", "/reset-password"].some(path => 
     nextUrl.pathname === path || nextUrl.pathname.startsWith("/books/")
   );
 
   const isAuthRoute = ["/login", "/register"].includes(nextUrl.pathname);
 
-  if (isApiAuthRoute) return NextResponse.next();
+  if (isApiAuthRoute || isPublicApiRoute) return NextResponse.next();
 
   if (isAuthRoute) {
     if (isLoggedIn) {

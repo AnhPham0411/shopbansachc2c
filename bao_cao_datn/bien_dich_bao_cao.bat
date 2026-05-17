@@ -8,7 +8,7 @@ pdflatex -interaction=nonstopmode main.tex
 
 echo.
 echo Dang xu ly tai lieu tham khao (bibtex)...
-bibtex main
+biber main
 
 echo.
 echo Dang bien dich lan 2 de cap nhat muc luc...

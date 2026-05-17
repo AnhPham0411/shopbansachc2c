@@ -26,8 +26,7 @@ interface Book {
 
 const CONDITIONS = [
   { id: "ALL", label: "Tất cả tình trạng" },
-  { id: "NEW_100", label: "Mới 100%" },
-  { id: "LIKE_NEW", label: "Như mới" },
+  { id: "NEW", label: "Mới" },
   { id: "GOOD", label: "Tốt" },
   { id: "OLD", label: "Cũ" },
 ];
@@ -47,8 +46,7 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
 
   const conditionKeys: Record<string, string> = {
     "ALL": "condition.all",
-    "NEW_100": "condition.new100",
-    "LIKE_NEW": "condition.likeNew",
+    "NEW": "condition.new",
     "GOOD": "condition.good",
     "OLD": "condition.old"
   };
@@ -84,7 +82,12 @@ export function BookCatalog({ initialBooks, initialSearch = "", categories = [] 
           if (!selectedCat) return false;
           return book.category === selectedCat.slug || book.categoryId === selectedCat.id;
         })();
-        const matchesCondition = selectedCondition === "ALL" || book.condition === selectedCondition;
+        const matchesCondition = selectedCondition === "ALL" || (() => {
+          if (selectedCondition === "NEW") {
+            return book.condition === "NEW_100" || book.condition === "LIKE_NEW";
+          }
+          return book.condition === selectedCondition;
+        })();
         const matchesStock = !onlyInStock || book.stockQuantity > 0;
         
         let matchesPrice = true;

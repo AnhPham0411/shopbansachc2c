@@ -44,7 +44,7 @@ export function AdminBookRow({ book, categories = [] }: { book: any, categories?
           <div className="flex items-center gap-4">
             <div className="w-14 h-16 relative rounded-lg overflow-hidden bg-zinc-100 flex-shrink-0 shadow-sm">
               {book.imageUrl ? (
-                <Image src={book.imageUrl} alt={book.title} fill className="object-cover" />
+                <Image src={book.imageUrl} alt={book.title} fill sizes="64px" className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-zinc-300">
                   <ShoppingBag size={20} />
@@ -159,9 +159,9 @@ export function AdminBookRow({ book, categories = [] }: { book: any, categories?
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-2">
                            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Tình trạng</label>
-                           <select name="condition" defaultValue={book.condition} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none">
+                           <select name="condition" defaultValue={book.condition === "LIKE_NEW" ? "NEW_100" : book.condition} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none">
                              <option value="NEW_100">Mới</option>
-                             <option value="LIKE_NEW">99%</option>
+                             
                              <option value="GOOD">Tốt</option>
                              <option value="OLD">Cũ</option>
                            </select>

@@ -2,36 +2,73 @@
 \begin{document}
 
 \section{Giao diện Trang chủ và Danh mục sách}
-Trang chủ được thiết kế với phong cách hiện đại, tối ưu hóa khả năng tìm kiếm và hiển thị các sản phẩm sách cũ theo độ mới và thể loại.
+Trang chủ hệ thống được xây dựng hiện đại với giao diện trực quan và thu hút. Thanh điều hướng (Navbar) cố định tích hợp thanh tìm kiếm thông minh và phân loại danh mục sản phẩm chi tiết. Bố cục trang chủ làm nổi bật thông điệp kết nối cộng đồng "Cho đi sách cũ, nhận lại tri thức mới", đi kèm thẻ thông tin giới thiệu tính năng giao dịch bảo đảm qua ví trung gian Escrow để củng cố lòng tin của người dùng mới tham gia hệ thống.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/homepage_mockup.png}
-    \caption{Giao diện Trang chủ hệ thống Libris}
+    \includegraphics[width=0.9\textwidth]{figures/homepage.png}
+    \caption{Giao diện Trang chủ hệ thống Libris với thông điệp trao đổi tri thức}
     \label{fig:ui_home}
 \end{figure}
 
 \section{Giao diện Dashboard Người bán (Seller Dashboard)}
-Giao diện quản trị cho phép người bán theo dõi doanh thu thực nhận và doanh thu đang bị giam (Escrow) một cách trực quan qua các biểu đồ.
+Giao diện dành cho người bán (Seller Dashboard) cung cấp bảng thống kê trực quan và toàn diện về hoạt động kinh doanh trực tuyến. Giao diện tích hợp bốn thẻ thông số quan trọng: Tổng sản phẩm, Đơn hàng mới, Số dư ví khả dụng và Tiền ký quỹ đang tạm giữ (Escrow). Menu điều hướng bên trái (Sidebar) giúp người bán dễ dàng chuyển đổi nhanh giữa các tính năng quản lý sản phẩm, đối soát đơn hàng và thiết lập ví thanh toán.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/seller_dashboard_mockup.png}
-    \caption{Giao diện Dashboard quản lý doanh thu của Người bán}
+    \includegraphics[width=0.9\textwidth]{figures/seller_dashboard.png}
+    \caption{Giao diện Dashboard quản trị dành cho Người bán}
     \label{fig:ui_seller_dash}
 \end{figure}
 
-\section{Giao diện Thanh toán và Tách đơn hàng}
-Luồng Checkout hiển thị rõ ràng việc tách đơn hàng theo từng Shop và tích hợp các phương thức thanh toán linh hoạt.
+\section{Giao diện Thanh toán và Gom nhóm đơn hàng}
+Giao diện luồng thanh toán (Checkout) được thiết kế tối giản, tập trung vào trải nghiệm người dùng. Hệ thống hỗ trợ tính năng tự động phân tách và gom nhóm sản phẩm theo từng Shop của người bán khác nhau trong cùng một đơn hàng tổng. Giao diện hiển thị rõ ràng thông tin địa chỉ nhận hàng, chi phí vận chuyển riêng biệt của từng gói hàng, và tích hợp các phương thức thanh toán điện tử hiện đại qua cổng VNPAY hoặc MOMO.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/checkout_mockup.png}
-    \caption{Giao diện Checkout đa shop và xác nhận thanh toán}
+    \includegraphics[width=0.9\textwidth]{figures/checkout.png}
+    \caption{Giao diện Thanh toán với tính năng gom nhóm sản phẩm theo Shop}
     \label{fig:ui_checkout}
 \end{figure}
 
-\section{Giao diện Quản trị viên (Admin Panel)}
-Admin có thể quản lý các yêu cầu rút tiền và theo dõi toàn bộ dòng tiền của sàn thông qua hệ thống Ledger tập trung.
+\section{Giao diện Chi tiết Sách và Đánh giá cộng đồng}
+Trang thông tin chi tiết sản phẩm hiển thị đầy đủ các thuộc tính của sách bao gồm tên tác giả, nhà xuất bản, mô tả nội dung, và đặc biệt là nhãn tình trạng vật lý (Mới, Tốt, Cũ). Nhãn cam kết bảo đảm giao dịch an toàn qua cơ chế Escrow được tích hợp trực quan ngay dưới phần giá cả. Bên dưới là phân khu bình luận và đánh giá đa chiều giúp người mua xem phản hồi từ cộng đồng và câu trả lời đối thoại của người bán.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/book_detail.png}
+    \caption{Giao diện Chi tiết sản phẩm và đánh giá từ cộng đồng}
+    \label{fig:ui_book_detail}
+\end{figure}
+
+\section{Giao diện Quản lý Ví điện tử và Lịch sử Giao dịch}
+Giao diện quản lý ví cá nhân hiển thị chi tiết hai nguồn tài chính chính: Số dư có thể rút và Số dư tạm giữ do giao dịch đang được bảo đảm (Escrow). Các nút tính năng như "Nạp tiền", "Rút tiền" được thiết kế nổi bật. Bảng đối soát chi tiết bên dưới ghi nhận lịch sử biến động số dư theo thời gian thực một cách minh bạch, hỗ trợ tối đa người dùng theo dõi và kiểm soát dòng tiền cá nhân trên sàn.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/wallet.png}
+    \caption{Giao diện Quản lý ví cá nhân và đối soát biến động số dư}
+    \label{fig:ui_wallet}
+\end{figure}
+
+\section{Giao diện Nhắn tin trực tuyến (Instant Message)}
+Hệ thống tin nhắn tức thời được thiết kế dạng khung chat trượt tiện lợi, cho phép người mua chủ động kết nối trực tiếp với người bán ngay trên trang chi tiết sách. Tính năng nhắn tin thời gian thực giúp trao đổi thông tin chi tiết về sách, yêu cầu xem thêm hình ảnh thực tế một cách nhanh chóng mà không cần qua trung gian hay lộ thông tin cá nhân bên ngoài hệ thống.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/chat.png}
+    \caption{Giao diện Nhắn tin trao đổi thời gian thực trực tuyến}
+    \label{fig:ui_chat}
+\end{figure}
+
+\section{Giao diện Đề xuất và Thương lượng giá cả (Negotiation)}
+Chức năng thương lượng giá cả (Trả giá) là điểm sáng trong mô hình mua bán sách C2C của hệ thống. Người mua có thể gửi trực tiếp một đề xuất giá mua mong muốn cho chủ sách thông qua giao diện trả giá thông minh. Hệ thống sẽ gửi thông báo tức thời đến người bán để phê duyệt (Chấp nhận hoặc Từ chối đề nghị), tạo ra cơ chế mua bán linh hoạt, tăng tỷ lệ chuyển đổi đơn hàng thành công trên sàn.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/thuong_luong_gia.png}
+    \caption{Giao diện Thương lượng giá cả đề xuất giữa Người mua và Người bán}
+    \label{fig:ui_negotiation}
+\end{figure}
 
 \end{document}

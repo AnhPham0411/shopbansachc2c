@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcDir = path.join('C:', 'Users', 'letua', '.gemini', 'antigravity', 'brain', 'ed9b7bfe-23f0-4b7b-8972-4fc1ac787d4c');
+const srcDir = path.join('C:', 'Users', 'letua', '.gemini', 'antigravity', 'brain', 'bcd944b2-8bee-4dd9-a953-ba7ba7706e7b');
 const destDir = path.join('d:', 'ban sach', 'bao_cao_datn', 'figures');
 
 // Ensure figures directory exists
@@ -11,23 +11,13 @@ if (!fs.existsSync(destDir)) {
 }
 
 const mappings = [
-  ['use_case_diagram_1777179712791.png', 'use_case_diagram.png'],
-  ['context_diagram_1777179728145.png', 'context_diagram.png'],
-  ['dfd_level_1_1777179742574.png', 'dfd_level_1.png'],
-  ['dfd_level_2_1777179756663.png', 'dfd_level_2_order.png'],
-  ['database_erd_1777179803926.png', 'database_erd.png'],
-  ['class_diagram_1777179821075.png', 'class_diagram.png'],
-  ['sequence_auth_1777179833472.png', 'sequence_auth.png'],
-  ['activity_checkout_1777179848832.png', 'activity_checkout.png'],
-  ['activity_dispute_1777179887929.png', 'activity_dispute.png'],
-  ['state_machine_order_1777179904172.png', 'state_machine_order.png'],
-  ['sequence_payment_1777179919474.png', 'sequence_payment.png'],
-  ['sequence_cashout_1777179937920.png', 'sequence_cashout.png'],
-  ['architecture_diagram_1777179989122.png', 'architecture_diagram.png'],
-  ['deployment_diagram_1777180001144.png', 'deployment_diagram.png'],
-  ['homepage_mockup_1777180016816.png', 'homepage_mockup.png'],
-  ['seller_dashboard_mockup_1777180061264.png', 'seller_dashboard_mockup.png'],
-  ['checkout_mockup_1777180079203.png', 'checkout_mockup.png'],
+  ['homepage_mockup_1778924507372.png', 'homepage_mockup.png'],
+  ['admin_dashboard_mockup_1778924855853.png', 'admin_dashboard_mockup.png'],
+  ['seller_dashboard_mockup_1778924870166.png', 'seller_dashboard_mockup.png'],
+  ['wallet_mockup_1778924887345.png', 'wallet_mockup.png'],
+  ['chat_mockup_1778924977565.png', 'chat_mockup.png'],
+  ['book_detail_mockup_retry_1778925150472.png', 'book_detail_mockup.png'],
+  ['checkout_mockup_1778925340250.png', 'checkout_mockup.png'],
 ];
 
 let copied = 0;
@@ -51,4 +41,5 @@ for (const [src, dest] of mappings) {
   }
 }
 
-console.log('\\nDone: ' + copied + ' copied, ' + failed + ' failed');
+console.log('\nDone: ' + copied + ' copied, ' + failed + ' failed');
+console.log('Please run this script using: node copy_figures.js');

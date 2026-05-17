@@ -187,12 +187,12 @@ export function AdminBookForm({ book, mode = "create", categories = [] }: AdminB
                     <select
                       name="condition"
                       required
-                      defaultValue={book?.condition || "NEW_100"}
+                      defaultValue={book?.condition === "LIKE_NEW" ? "NEW_100" : (book?.condition || "NEW_100")}
                       className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 ring-primary/20 transition-all appearance-none"
                     >
-                      <option value="NEW_100">Mới 100%</option>
-                      <option value="LIKE_NEW">Like New (99%)</option>
-                      <option value="GOOD">Khá (80-90%)</option>
+                      <option value="NEW_100">Mới</option>
+                      
+                      <option value="GOOD">Tốt</option>
                       <option value="OLD">Cũ</option>
                     </select>
                   </div>

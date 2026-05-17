@@ -34,6 +34,7 @@ export default async function SellerOffersPage() {
                     src={offer.book.imageUrl || "/placeholder-book.png"} 
                     alt={offer.book.title}
                     fill
+                    sizes="64px"
                     className="object-cover"
                   />
                 </div>

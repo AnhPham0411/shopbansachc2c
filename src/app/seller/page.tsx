@@ -81,7 +81,7 @@ export default async function SellerOverviewPage() {
                    </div>
                    <div className="text-right">
                       <span className="text-[10px] font-black uppercase px-2 py-1 rounded-md bg-zinc-100 text-zinc-500">
-                        {book.condition.replace('_', ' ')}
+                        {book.condition === "NEW_100" || book.condition === "LIKE_NEW" ? "Mới" : book.condition === "GOOD" ? "Tốt" : "Cũ"}
                       </span>
                    </div>
                 </div>

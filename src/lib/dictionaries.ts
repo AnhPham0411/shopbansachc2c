@@ -34,8 +34,9 @@ export const dictionaries = {
     "catalog.collapse": "Thu gọn",
     // Conditions
     "condition.all": "Tất cả tình trạng",
-    "condition.new100": "Mới 100%",
-    "condition.likeNew": "Như mới",
+    "condition.new": "Mới",
+    "condition.new100": "Mới",
+    "condition.likeNew": "Mới",
     "condition.good": "Tốt",
     "condition.old": "Cũ",
     // Price Ranges
@@ -361,8 +362,9 @@ export const dictionaries = {
     "catalog.collapse": "Show less",
     // Conditions
     "condition.all": "All conditions",
-    "condition.new100": "New 100%",
-    "condition.likeNew": "Like new",
+    "condition.new": "New",
+    "condition.new100": "New",
+    "condition.likeNew": "New",
     "condition.good": "Good",
     "condition.old": "Old",
     // Price Ranges

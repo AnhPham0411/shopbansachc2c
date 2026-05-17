@@ -181,9 +181,9 @@ export function SellerBookRow({
                        <div className="grid grid-cols-2 gap-4">
                          <div className="space-y-2">
                            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-4">Tình trạng</label>
-                           <select name="condition" defaultValue={book.condition} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none outline-none">
+                           <select name="condition" defaultValue={book.condition === "LIKE_NEW" ? "NEW_100" : book.condition} className="w-full bg-zinc-50 border-none rounded-2xl py-4 px-6 text-sm font-bold appearance-none outline-none">
                              <option value="NEW_100">Mới</option>
-                             <option value="LIKE_NEW">99%</option>
+                             
                              <option value="GOOD">Tốt</option>
                              <option value="OLD">Cũ</option>
                            </select>

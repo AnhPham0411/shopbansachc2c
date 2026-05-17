@@ -159,9 +159,8 @@ export function CreateBookModal({ vouchers = [] }: { vouchers?: any[] }) {
                       required
                       className="w-full bg-white/5 border border-white/5 rounded-xl py-3 px-4 focus:outline-none focus:border-primary/50 transition-colors appearance-none"
                     >
-                      <option value="NEW_100" className="bg-[#0f172a]">Mới 100%</option>
-                      <option value="LIKE_NEW" className="bg-[#0f172a]">Like New (99%)</option>
-                      <option value="GOOD" className="bg-[#0f172a]">Khá (80-90%)</option>
+                      <option value="NEW_100" className="bg-[#0f172a]">Mới</option>
+                      <option value="GOOD" className="bg-[#0f172a]">Tốt</option>
                       <option value="OLD" className="bg-[#0f172a]">Cũ</option>
                     </select>
                   </div>
